@@ -1,0 +1,70 @@
+@media (max-width: 1100px) {
+  .app-shell {
+    padding: 24px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero__meta {
+    grid-template-columns: 1fr;
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .hero__actions {
+    justify-self: start;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel--form,
+  .panel--list,
+  .panel--detail {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 20px;
+  }
+
+  .hero {
+    padding: 18px;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .meta-item {
+    grid-template-columns: 1fr;
+  }
+
+  .hero__actions {
+    width: 100%;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+    border-spacing: 0;
+  }
+
+  .table--attachments {
+    border-spacing: 0 6px;
+  }
+
+  .btn--push-right {
+    margin-left: 0;
+  }
+
+  .action-bar__group--end {
+    margin-left: 0;
+  }
+}
