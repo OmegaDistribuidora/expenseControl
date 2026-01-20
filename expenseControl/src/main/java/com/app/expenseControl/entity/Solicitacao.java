@@ -30,6 +30,9 @@ public class Solicitacao {
     @Column(nullable = false, length = 120)
     private String titulo;
 
+    @Column(length = 120)
+    private String solicitanteNome;
+
     @Column(nullable = false, length = 2000)
     private String descricao;
 

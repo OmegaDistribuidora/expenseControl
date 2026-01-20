@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest, API_BASE } from "../models/api.js";
 import { loadStoredAuth, saveStoredAuth } from "../models/storage.js";
 
@@ -27,6 +27,7 @@ const parseMoneyInput = (value) => {
 const emptyDraft = () => ({
   categoriaId: "",
   titulo: "",
+  solicitanteNome: "",
   descricao: "",
   ondeVaiSerUsado: "",
   valorEstimado: "",
@@ -39,6 +40,7 @@ const emptyDraft = () => ({
 const mapSolicitacaoToDraft = (solicitacao) => ({
   categoriaId: solicitacao?.categoriaId ? String(solicitacao.categoriaId) : "",
   titulo: solicitacao?.titulo || "",
+  solicitanteNome: solicitacao?.solicitanteNome || "",
   descricao: solicitacao?.descricao || "",
   ondeVaiSerUsado: solicitacao?.ondeVaiSerUsado || "",
   valorEstimado: solicitacao?.valorEstimado ?? "",
@@ -55,6 +57,7 @@ const mapSolicitacaoToDraft = (solicitacao) => ({
 const buildSolicitacaoPayload = (draft) => ({
   categoriaId: Number(draft.categoriaId),
   titulo: draft.titulo.trim(),
+  solicitanteNome: draft.solicitanteNome.trim(),
   descricao: draft.descricao.trim(),
   ondeVaiSerUsado: draft.ondeVaiSerUsado.trim(),
   valorEstimado: parseMoneyInput(draft.valorEstimado),
@@ -81,6 +84,7 @@ const normalizeText = (value) => {
 const buildSearchText = (item) => {
   return [
     item?.titulo,
+    item?.solicitanteNome,
     item?.filial,
     item?.categoriaNome,
     item?.fornecedor,
@@ -156,13 +160,13 @@ export const useAppController = () => {
   const [attachmentsUploading, setAttachmentsUploading] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState([]);
 
-  const showNotice = (type, message) => {
+  const showNotice = useCallback((type, message) => {
     setNotice({ type, message });
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setNotice(null), 5000);
-  };
+  }, []);
 
-  const dismissNotice = () => setNotice(null);
+  const dismissNotice = useCallback(() => setNotice(null), []);
 
   const openConfirm = (config) => {
     setConfirmDialog({
@@ -235,13 +239,13 @@ export const useAppController = () => {
     setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const clearPendingAttachments = () => {
+  const clearPendingAttachments = useCallback(() => {
     setPendingAttachments([]);
-  };
+  }, []);
 
-  const requestAuthed = async (path, options = {}) => {
+  const requestAuthed = useCallback(async (path, options = {}) => {
     return apiRequest(path, options, auth?.basic);
-  };
+  }, [auth?.basic]);
 
   const updateLoginForm = (patch) => {
     setLoginForm((prev) => ({ ...prev, ...patch }));
@@ -302,7 +306,7 @@ export const useAppController = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setAuth(null);
     setProfile(null);
     setLoginForm({ usuario: "", password: "" });
@@ -330,19 +334,18 @@ export const useAppController = () => {
     setAttachmentsLoading(false);
     setAttachmentsUploading(false);
     clearPendingAttachments();
-  };
+  }, [clearPendingAttachments]);
 
-  const loadProfile = async () => {
-    if (!auth?.basic) return;
+  const loadProfile = useCallback(async () => {
     try {
       const profileData = await requestAuthed("/auth/me");
       setProfile(profileData);
     } catch {
       handleLogout();
     }
-  };
+  }, [requestAuthed, handleLogout]);
 
-  const loadFilialData = async () => {
+  const loadFilialData = useCallback(async () => {
     setFilialLoading(true);
     try {
       const [categories, solicitacoes] = await Promise.all([
@@ -357,9 +360,9 @@ export const useAppController = () => {
     } finally {
       setFilialLoading(false);
     }
-  };
+  }, [requestAuthed, showNotice]);
 
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     setAdminLoading(true);
     try {
       const statusQuery = adminStatus === "TODOS" ? "" : `?status=${adminStatus}`;
@@ -375,9 +378,9 @@ export const useAppController = () => {
     } finally {
       setAdminLoading(false);
     }
-  };
+  }, [requestAuthed, showNotice, adminStatus]);
 
-  const loadAttachments = async (solicitacaoId) => {
+  const loadAttachments = useCallback(async (solicitacaoId) => {
     if (!solicitacaoId) {
       setAttachments([]);
       return;
@@ -393,7 +396,7 @@ export const useAppController = () => {
     } finally {
       setAttachmentsLoading(false);
     }
-  };
+  }, [requestAuthed, showNotice]);
 
   const handleUploadAttachment = async (file, solicitacaoId) => {
     await handleUploadAttachments([file], solicitacaoId);
@@ -530,22 +533,22 @@ export const useAppController = () => {
     return sortSolicitacoes(base, adminSort);
   }, [adminSolicitacoes, adminSearch, adminSort]);
 
+  const profileType = profile?.tipo;
+
   useEffect(() => {
-    if (!auth) return;
+    if (!auth?.basic) return;
     void loadProfile();
-  }, [auth]);
+  }, [auth?.basic, loadProfile]);
 
   useEffect(() => {
-    if (!profile) return;
-    if (profile.tipo === "FILIAL") {
-      void loadFilialData();
-    }
-  }, [profile?.tipo]);
+    if (profileType !== "FILIAL") return;
+    void loadFilialData();
+  }, [profileType, loadFilialData]);
 
   useEffect(() => {
-    if (!profile || profile.tipo !== "ADMIN") return;
+    if (profileType !== "ADMIN") return;
     void loadAdminData();
-  }, [profile?.tipo, adminStatus]);
+  }, [profileType, loadAdminData]);
 
   useEffect(() => {
     if (filteredFilialSolicitacoes.length === 0) {
@@ -577,14 +580,14 @@ export const useAppController = () => {
 
   useEffect(() => {
     if (!auth?.basic) return;
-    if (!profile) return;
-    const solicitacaoId = profile.tipo === "ADMIN" ? adminSelectedId : filialSelectedId;
+    if (!profileType) return;
+    const solicitacaoId = profileType === "ADMIN" ? adminSelectedId : filialSelectedId;
     if (!solicitacaoId) {
       setAttachments([]);
       return;
     }
     void loadAttachments(solicitacaoId);
-  }, [profile?.tipo, filialSelectedId, adminSelectedId, auth?.basic]);
+  }, [auth?.basic, profileType, adminSelectedId, filialSelectedId, loadAttachments]);
 
   useEffect(() => {
     return () => {
@@ -703,6 +706,28 @@ export const useAppController = () => {
       const message = error instanceof Error ? error.message : "Erro ao criar categoria.";
       showNotice("error", message);
     }
+  };
+
+  const handleDeactivateCategory = (categoria) => {
+    if (!categoria?.id) return;
+    openConfirm({
+      title: "Inativar categoria",
+      message: `Deseja inativar a categoria "${categoria.nome}"?`,
+      confirmLabel: "Inativar",
+      intent: "danger",
+      onConfirm: async () => {
+        try {
+          await requestAuthed(`/admin/categorias/${categoria.id}/inativar`, {
+            method: "PATCH",
+          });
+          showNotice("success", "Categoria inativada.");
+          await loadAdminData();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Erro ao inativar categoria.";
+          showNotice("error", message);
+        }
+      },
+    });
   };
 
   const handleDecision = async (decisao) => {
@@ -870,6 +895,7 @@ export const useAppController = () => {
       updateDecisionForm,
       updatePedidoInfoForm,
       onCreateCategory: handleCreateCategory,
+      onDeactivateCategory: handleDeactivateCategory,
       onDecision: handleDecision,
       onPedidoInfo: handlePedidoInfo,
       onDeleteSolicitacao: handleDeleteSolicitacao,

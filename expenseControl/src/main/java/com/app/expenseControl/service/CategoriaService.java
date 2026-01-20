@@ -42,6 +42,23 @@ public class CategoriaService {
                 .toList();
     }
 
+    public CategoriaResponseDTO inativar(Long id) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria nao encontrada."));
+
+        if (Boolean.TRUE.equals(categoria.getAtiva())) {
+            categoria.setAtiva(false);
+            categoria = categoriaRepository.save(categoria);
+        }
+
+        return new CategoriaResponseDTO(
+                categoria.getId(),
+                categoria.getNome(),
+                categoria.getDescricao(),
+                categoria.getAtiva()
+        );
+    }
+
     public List<CategoriaResponseDTO> listarAtivas() {
         return categoriaRepository.findByAtivaTrueOrderByNomeAsc().stream()
                 .map(c -> new CategoriaResponseDTO(c.getId(), c.getNome(), c.getDescricao(), c.getAtiva()))

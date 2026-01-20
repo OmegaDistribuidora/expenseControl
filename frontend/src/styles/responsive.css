@@ -27,6 +27,20 @@
     grid-column: 1;
     grid-row: auto;
   }
+
+  .layout__tabs {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cards--columns {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {

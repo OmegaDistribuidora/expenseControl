@@ -12,6 +12,9 @@ public record SolicitacaoCreateDTO(
         @NotBlank @Size(max = 120)
         String titulo,
 
+        @NotBlank @Size(max = 120)
+        String solicitanteNome,
+
         @NotBlank @Size(max = 2000)
         String descricao,
 

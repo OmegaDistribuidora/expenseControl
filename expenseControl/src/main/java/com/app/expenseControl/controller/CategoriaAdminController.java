@@ -28,5 +28,10 @@ public class CategoriaAdminController {
     public List<CategoriaResponseDTO> listar() {
         return categoriaService.listar();
     }
+
+    @PatchMapping("/{id}/inativar")
+    public ResponseEntity<CategoriaResponseDTO> inativar(@PathVariable Long id) {
+        return ResponseEntity.ok(categoriaService.inativar(id));
+    }
 }
 

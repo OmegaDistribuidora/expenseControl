@@ -77,6 +77,7 @@ public class SolicitacaoService {
                 .filial(conta.getFilial())
                 .categoria(categoria)
                 .titulo(dto.titulo().trim())
+                .solicitanteNome(dto.solicitanteNome().trim())
                 .descricao(dto.descricao())
                 .ondeVaiSerUsado(dto.ondeVaiSerUsado())
                 .valorEstimado(dto.valorEstimado())
@@ -121,6 +122,7 @@ public class SolicitacaoService {
 
         s.setCategoria(categoria);
         s.setTitulo(dto.dados().titulo().trim());
+        s.setSolicitanteNome(dto.dados().solicitanteNome().trim());
         s.setDescricao(dto.dados().descricao());
         s.setOndeVaiSerUsado(dto.dados().ondeVaiSerUsado());
         s.setValorEstimado(dto.dados().valorEstimado());
@@ -374,6 +376,7 @@ public class SolicitacaoService {
                 s.getCategoria().getId(),
                 s.getCategoria().getNome(),
                 s.getTitulo(),
+                s.getSolicitanteNome(),
                 s.getDescricao(),
                 s.getOndeVaiSerUsado(),
                 s.getValorEstimado(),

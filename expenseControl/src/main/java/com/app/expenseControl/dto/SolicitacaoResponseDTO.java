@@ -11,6 +11,7 @@ public record SolicitacaoResponseDTO(
         Long categoriaId,
         String categoriaNome,
         String titulo,
+        String solicitanteNome,
         String descricao,
         String ondeVaiSerUsado,
         BigDecimal valorEstimado,

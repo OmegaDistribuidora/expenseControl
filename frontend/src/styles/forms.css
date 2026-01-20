@@ -23,6 +23,19 @@
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
 
+.panel--categories form {
+  display: grid;
+  gap: 10px;
+}
+
+.panel--categories .field {
+  margin-bottom: 10px;
+}
+
+.panel--categories .field-row {
+  gap: 12px;
+}
+
 .file-field {
   margin-bottom: 16px;
 }
