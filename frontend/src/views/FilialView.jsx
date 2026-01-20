@@ -191,7 +191,7 @@ export const FilialView = ({
           </div>
 
           <div className="field">
-            <label>Descrição</label>
+            <label>Descrição / Justificativa</label>
             <textarea
               value={draft.descricao}
               onChange={(event) => onUpdateDraft({ descricao: event.target.value })}
