@@ -4,13 +4,8 @@
   }
 
   .hero {
-    grid-template-columns: 1fr;
-  }
-
-  .hero__meta {
-    grid-template-columns: 1fr;
-    padding-left: 0;
-    border-left: none;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .hero__actions {
@@ -38,8 +33,25 @@
     grid-template-columns: 1fr;
   }
 
+  .stats-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .detail-columns {
     grid-template-columns: 1fr;
+  }
+
+  .stats-section__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chart-wrapper {
+    height: 220px;
+  }
+
+  .chart-wrapper--compact {
+    height: 190px;
   }
 }
 
@@ -62,6 +74,10 @@
 
   .hero__actions {
     width: 100%;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
   }
 
   .table {

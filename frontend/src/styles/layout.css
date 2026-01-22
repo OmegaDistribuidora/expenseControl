@@ -10,17 +10,37 @@
 }
 
 .hero {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.3fr) minmax(240px, 1fr) auto;
-  gap: 18px 24px;
+  display: flex;
   align-items: center;
-  padding: 22px 26px;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--stroke);
-  border-left: 4px solid var(--accent);
   box-shadow: var(--shadow);
   animation: rise 0.6s ease both;
+}
+
+.hero__brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero__logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.hero__logo svg {
+  width: 22px;
+  height: 22px;
 }
 
 .hero__title {
@@ -33,16 +53,14 @@
 .hero__subtitle {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 1.02rem;
+  font-size: 0.98rem;
   line-height: 1.55;
 }
 
-.hero__meta {
-  display: grid;
-  gap: 10px;
-  align-content: center;
-  padding-left: 16px;
-  border-left: 1px solid var(--stroke);
+.hero__meta-line {
+  margin: 4px 0 0;
+  font-size: 0.92rem;
+  color: var(--muted);
 }
 
 .meta-item {
@@ -152,6 +170,86 @@
 .layout--admin.is-categories .panel--list,
 .layout--admin.is-categories .panel--detail {
   display: none;
+}
+
+.layout--admin.is-stats .panel--stats {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.layout--admin.is-compact .panel {
+  padding: 16px 18px;
+  gap: 10px;
+}
+
+.layout--filial .layout__tabs {
+  justify-self: start;
+  margin-top: 0;
+  grid-row: 1;
+}
+
+.layout--filial {
+  grid-template-rows: auto auto auto;
+}
+
+.layout--filial .panel--form {
+  grid-row: 2 / span 2;
+}
+
+.layout--filial .panel--list {
+  grid-row: 2;
+}
+
+.layout--filial .panel--detail {
+  grid-row: 3;
+}
+
+.layout--filial.is-view .panel--list,
+.layout--filial.is-view .panel--detail {
+  grid-column: 1 / -1;
+}
+
+.layout--filial.is-create .panel--form {
+  grid-column: 1 / -1;
+}
+
+.layout--admin.is-compact .panel__title {
+  font-size: 1.08rem;
+}
+
+.layout--admin.is-compact .panel__subtitle {
+  font-size: 0.92rem;
+}
+
+.layout--admin.is-compact .detail-card {
+  gap: 10px;
+}
+
+.layout--admin.is-compact .detail-title {
+  font-size: 1.05rem;
+}
+
+.layout--admin.is-compact .detail-subtitle {
+  font-size: 0.92rem;
+  margin-top: 4px;
+}
+
+.layout--admin.is-compact .detail-grid {
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.layout--admin.is-compact .detail-columns {
+  gap: 12px;
+}
+
+.layout--admin.is-compact .detail-block {
+  padding: 10px 12px;
+  gap: 6px;
+}
+
+.layout--admin.is-compact .detail-block p {
+  line-height: 1.5;
 }
 
 .panel:nth-of-type(1) {

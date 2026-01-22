@@ -3,12 +3,11 @@ package com.app.expenseControl.controller;
 import com.app.expenseControl.dto.SolicitacaoCreateDTO;
 import com.app.expenseControl.dto.SolicitacaoReenvioDTO;
 import com.app.expenseControl.dto.SolicitacaoResponseDTO;
+import com.app.expenseControl.dto.PageResponse;
 import com.app.expenseControl.service.SolicitacaoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/solicitacoes")
@@ -32,8 +31,12 @@ public class SolicitacaoController {
     }
 
     @GetMapping
-    public List<SolicitacaoResponseDTO> listar() {
-        return solicitacaoService.listarDaFilial();
+    public PageResponse<SolicitacaoResponseDTO> listar(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "q", required = false) String query
+    ) {
+        return solicitacaoService.listarDaFilial(page, size, query);
     }
 
     @GetMapping("/{id}")

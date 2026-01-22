@@ -3,12 +3,12 @@ package com.app.expenseControl.controller;
 import com.app.expenseControl.dto.DecisaoSolicitacaoDTO;
 import com.app.expenseControl.dto.SolicitacaoPedidoInfoDTO;
 import com.app.expenseControl.dto.SolicitacaoResponseDTO;
+import com.app.expenseControl.dto.PageResponse;
+import com.app.expenseControl.dto.SolicitacaoStatsDTO;
 import com.app.expenseControl.service.SolicitacaoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/admin/solicitacoes")
@@ -21,8 +21,18 @@ public class AdminSolicitacaoController {
     }
 
     @GetMapping
-    public List<SolicitacaoResponseDTO> listar(@RequestParam(value = "status", required = false) String status) {
-        return solicitacaoService.listarParaAdmin(status);
+    public PageResponse<SolicitacaoResponseDTO> listar(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "q", required = false) String query
+    ) {
+        return solicitacaoService.listarParaAdmin(status, page, size, query);
+    }
+
+    @GetMapping("/estatisticas")
+    public SolicitacaoStatsDTO estatisticas() {
+        return solicitacaoService.estatisticasAprovadas();
     }
 
     @PatchMapping("/{id}/pedido-info")

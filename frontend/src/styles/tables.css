@@ -60,6 +60,28 @@
   padding: 10px 12px;
 }
 
+.layout--admin.is-compact .table {
+  font-size: 0.92rem;
+}
+
+.layout--admin.is-compact .table th,
+.layout--admin.is-compact .table td {
+  padding: 8px 0;
+}
+
+.layout--admin.is-compact .table--attachments {
+  border-spacing: 0 6px;
+  font-size: 0.9rem;
+}
+
+.layout--admin.is-compact .table--attachments thead th {
+  padding: 0 6px 4px;
+}
+
+.layout--admin.is-compact .table--attachments tbody td {
+  padding: 10px 10px;
+}
+
 .file-name {
   font-weight: 600;
   color: var(--text);

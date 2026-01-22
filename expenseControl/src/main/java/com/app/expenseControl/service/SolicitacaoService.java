@@ -1,13 +1,13 @@
 package com.app.expenseControl.service;
 
 import com.app.expenseControl.dto.DecisaoSolicitacaoDTO;
+import com.app.expenseControl.dto.PageResponse;
 import com.app.expenseControl.dto.SolicitacaoCreateDTO;
-import com.app.expenseControl.dto.SolicitacaoHistoricoResponseDTO;
 import com.app.expenseControl.dto.SolicitacaoLinhaCreateDTO;
-import com.app.expenseControl.dto.SolicitacaoLinhaResponseDTO;
 import com.app.expenseControl.dto.SolicitacaoPedidoInfoDTO;
 import com.app.expenseControl.dto.SolicitacaoReenvioDTO;
 import com.app.expenseControl.dto.SolicitacaoResponseDTO;
+import com.app.expenseControl.dto.SolicitacaoStatsDTO;
 import com.app.expenseControl.entity.Categoria;
 import com.app.expenseControl.entity.Conta;
 import com.app.expenseControl.entity.Solicitacao;
@@ -23,6 +23,10 @@ import com.app.expenseControl.repository.SolicitacaoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -40,6 +44,8 @@ public class SolicitacaoService {
     private static final String ACAO_REENVIADA = "REENVIADA";
     private static final String ACAO_APROVADA = "APROVADA";
     private static final String ACAO_REPROVADA = "REPROVADA";
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 50;
 
     private final SolicitacaoRepository solicitacaoRepository;
     private final CategoriaRepository categoriaRepository;
@@ -95,7 +101,7 @@ public class SolicitacaoService {
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
 
-        return toDTO(salva, linhasSalvas, historico);
+        return SolicitacaoMapper.toDTO(salva, linhasSalvas, historico);
     }
 
     @Transactional
@@ -144,7 +150,7 @@ public class SolicitacaoService {
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
 
-        return toDTO(salva, linhasSalvas, historico);
+        return SolicitacaoMapper.toDTO(salva, linhasSalvas, historico);
     }
 
     @Transactional(readOnly = true)
@@ -156,6 +162,33 @@ public class SolicitacaoService {
                 .findByFilialOrderByEnviadoEmDesc(conta.getFilial());
 
         return mapComLinhasEHistorico(solicitacoes);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<SolicitacaoResponseDTO> listarDaFilial(int page, int size, String query) {
+        Conta conta = getContaLogada();
+        ensureFilial(conta);
+
+        Pageable pageable = buildPageable(page, size, Sort.by("enviadoEm").descending());
+        String term = normalizeSearchTerm(query);
+        Long searchId = parseSearchId(query);
+        StatusSolicitacao statusSearch = parseSearchStatus(query);
+        Page<Solicitacao> solicitacoes;
+        if (term == null) {
+            solicitacoes = solicitacaoRepository
+                    .findByFilialOrderByEnviadoEmDesc(conta.getFilial(), pageable);
+        } else {
+            solicitacoes = solicitacaoRepository.searchByFilial(
+                    conta.getFilial(),
+                    term,
+                    searchId,
+                    statusSearch,
+                    pageable
+            );
+        }
+
+        List<SolicitacaoResponseDTO> items = mapComLinhasEHistorico(solicitacoes.getContent());
+        return toPageResponse(solicitacoes, items);
     }
 
     @Transactional(readOnly = true)
@@ -174,7 +207,7 @@ public class SolicitacaoService {
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(s.getId());
 
-        return toDTO(s, linhas, historico);
+        return SolicitacaoMapper.toDTO(s, linhas, historico);
     }
 
     @Transactional(readOnly = true)
@@ -182,24 +215,65 @@ public class SolicitacaoService {
         Conta conta = getContaLogada();
         ensureAdmin(conta);
 
-        List<Solicitacao> solicitacoes;
-        if (status == null || status.isBlank()) {
-            solicitacoes = solicitacaoRepository.findAll();
-        } else {
-            StatusSolicitacao statusEnum;
-            try {
-                statusEnum = StatusSolicitacao.valueOf(status.trim().toUpperCase());
-            } catch (IllegalArgumentException ex) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Status invalido. Use PENDENTE, PENDENTE_INFO, APROVADO ou REPROVADO."
-                );
-            }
-
-            solicitacoes = solicitacaoRepository.findByStatusOrderByEnviadoEmDesc(statusEnum);
-        }
+        StatusSolicitacao statusEnum = parseStatus(status);
+        List<Solicitacao> solicitacoes = statusEnum == null
+                ? solicitacaoRepository.findAll()
+                : solicitacaoRepository.findByStatusOrderByEnviadoEmDesc(statusEnum);
 
         return mapComLinhasEHistorico(solicitacoes);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<SolicitacaoResponseDTO> listarParaAdmin(String status, int page, int size, String query) {
+        Conta conta = getContaLogada();
+        ensureAdmin(conta);
+
+        Pageable pageable = buildPageable(page, size, Sort.by("enviadoEm").descending());
+        StatusSolicitacao statusEnum = parseStatus(status);
+        String term = normalizeSearchTerm(query);
+        Long searchId = parseSearchId(query);
+        StatusSolicitacao statusSearch = parseSearchStatus(query);
+        Page<Solicitacao> solicitacoes;
+        if (term == null) {
+            solicitacoes = statusEnum == null
+                    ? solicitacaoRepository.findAll(pageable)
+                    : solicitacaoRepository.findByStatusOrderByEnviadoEmDesc(statusEnum, pageable);
+        } else if (statusEnum == null) {
+            solicitacoes = solicitacaoRepository.searchAll(
+                    term,
+                    searchId,
+                    statusSearch,
+                    pageable
+            );
+        } else {
+            solicitacoes = solicitacaoRepository.searchByStatus(
+                    statusEnum,
+                    term,
+                    searchId,
+                    statusSearch,
+                    pageable
+            );
+        }
+
+        List<SolicitacaoResponseDTO> items = mapComLinhasEHistorico(solicitacoes.getContent());
+        return toPageResponse(solicitacoes, items);
+    }
+
+    public SolicitacaoStatsDTO estatisticasAprovadas() {
+        Conta conta = getContaLogada();
+        ensureAdmin(conta);
+
+        long totalAprovadas = solicitacaoRepository.countByStatus(StatusSolicitacao.APROVADO);
+        var valorTotalAprovado = solicitacaoRepository.sumValorAprovadoByStatus(StatusSolicitacao.APROVADO);
+        if (valorTotalAprovado == null) {
+            valorTotalAprovado = java.math.BigDecimal.ZERO;
+        }
+
+        var porCategoria = solicitacaoRepository.resumoPorCategoria(StatusSolicitacao.APROVADO);
+        var porFilial = solicitacaoRepository.resumoPorFilial(StatusSolicitacao.APROVADO);
+        var porStatus = solicitacaoRepository.resumoPorStatus();
+
+        return new SolicitacaoStatsDTO(totalAprovadas, valorTotalAprovado, porCategoria, porFilial, porStatus);
     }
 
     @Transactional
@@ -226,7 +300,7 @@ public class SolicitacaoService {
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
 
-        return toDTO(salva, linhas, historico);
+        return SolicitacaoMapper.toDTO(salva, linhas, historico);
     }
 
     @Transactional
@@ -270,7 +344,7 @@ public class SolicitacaoService {
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
 
-        return toDTO(salva, linhas, historico);
+        return SolicitacaoMapper.toDTO(salva, linhas, historico);
     }
 
     @Transactional
@@ -283,6 +357,75 @@ public class SolicitacaoService {
         solicitacaoLinhaRepository.deleteBySolicitacaoId(s.getId());
         attachmentService.deleteAllForSolicitacao(s.getId());
         solicitacaoRepository.delete(s);
+    }
+
+    private PageResponse<SolicitacaoResponseDTO> toPageResponse(Page<Solicitacao> page,
+                                                                List<SolicitacaoResponseDTO> items) {
+        return new PageResponse<>(
+                items,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+    }
+
+    private StatusSolicitacao parseStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return StatusSolicitacao.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Status invalido. Use PENDENTE, PENDENTE_INFO, APROVADO ou REPROVADO."
+            );
+        }
+    }
+
+    private StatusSolicitacao parseSearchStatus(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        try {
+            return StatusSolicitacao.valueOf(query.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private String normalizeSearchTerm(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        return "%" + query.trim().toLowerCase() + "%";
+    }
+
+    private Long parseSearchId(String query) {
+        if (query == null) {
+            return null;
+        }
+        String trimmed = query.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        for (int i = 0; i < trimmed.length(); i++) {
+            if (!Character.isDigit(trimmed.charAt(i))) {
+                return null;
+            }
+        }
+        try {
+            return Long.valueOf(trimmed);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Pageable buildPageable(int page, int size, Sort sort) {
+        int safePage = Math.max(0, page);
+        int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
+        return PageRequest.of(safePage, safeSize, sort);
     }
 
     private Conta getContaLogada() {
@@ -359,57 +502,12 @@ public class SolicitacaoService {
                 .collect(Collectors.groupingBy(SolicitacaoHistorico::getSolicitacaoId));
 
         return solicitacoes.stream()
-                .map(solicitacao -> toDTO(
+                .map(solicitacao -> SolicitacaoMapper.toDTO(
                         solicitacao,
                         linhasPorSolicitacao.getOrDefault(solicitacao.getId(), List.of()),
                         historicoPorSolicitacao.getOrDefault(solicitacao.getId(), List.of())
                 ))
                 .toList();
-    }
-
-    private SolicitacaoResponseDTO toDTO(Solicitacao s,
-                                         List<SolicitacaoLinha> linhas,
-                                         List<SolicitacaoHistorico> historico) {
-        return new SolicitacaoResponseDTO(
-                s.getId(),
-                s.getFilial(),
-                s.getCategoria().getId(),
-                s.getCategoria().getNome(),
-                s.getTitulo(),
-                s.getSolicitanteNome(),
-                s.getDescricao(),
-                s.getOndeVaiSerUsado(),
-                s.getValorEstimado(),
-                s.getValorAprovado(),
-                s.getFornecedor(),
-                s.getFormaPagamento(),
-                s.getObservacoes(),
-                s.getStatus(),
-                s.getEnviadoEm(),
-                s.getDecididoEm(),
-                s.getComentarioDecisao(),
-                linhas.stream().map(this::toLinhaDTO).toList(),
-                historico.stream().map(this::toHistoricoDTO).toList()
-        );
-    }
-
-    private SolicitacaoLinhaResponseDTO toLinhaDTO(SolicitacaoLinha linha) {
-        return new SolicitacaoLinhaResponseDTO(
-                linha.getId(),
-                linha.getDescricao(),
-                linha.getValor(),
-                linha.getObservacao()
-        );
-    }
-
-    private SolicitacaoHistoricoResponseDTO toHistoricoDTO(SolicitacaoHistorico historico) {
-        return new SolicitacaoHistoricoResponseDTO(
-                historico.getId(),
-                historico.getAtor(),
-                historico.getAcao(),
-                historico.getComentario(),
-                historico.getCriadoEm()
-        );
     }
 }
 
