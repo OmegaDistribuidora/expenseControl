@@ -53,14 +53,14 @@ public class AttachmentService {
     @Transactional
     public AttachmentResponseDTO upload(Long solicitacaoId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo nao enviado.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo não enviado.");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo excede 10MB.");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType.toLowerCase())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de arquivo nao permitido.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de arquivo não permitido.");
         }
 
         Solicitacao solicitacao = buscarSolicitacao(solicitacaoId);
@@ -109,7 +109,7 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     public AttachmentDownload download(Long attachmentId) {
         Attachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Anexo nao encontrado."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Anexo não encontrado."));
         Solicitacao solicitacao = attachment.getSolicitacao();
 
         Conta conta = getContaLogada();
@@ -121,7 +121,7 @@ public class AttachmentService {
     @Transactional
     public void delete(Long attachmentId) {
         Attachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Anexo nao encontrado."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Anexo não encontrado."));
         Solicitacao solicitacao = attachment.getSolicitacao();
 
         Conta conta = getContaLogada();
@@ -143,7 +143,7 @@ public class AttachmentService {
 
     private Solicitacao buscarSolicitacao(Long solicitacaoId) {
         return solicitacaoRepository.findById(solicitacaoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada."));
     }
 
     private void ensureAccess(Conta conta, Solicitacao solicitacao) {
@@ -151,16 +151,16 @@ public class AttachmentService {
             return;
         }
         if (conta.getTipo() != TipoConta.FILIAL) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conta sem permissao para anexos.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conta sem permissão para anexos.");
         }
         if (conta.getFilial() == null || !conta.getFilial().equals(solicitacao.getFilial())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitacao nao pertence a filial.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitação não pertence à filial.");
         }
     }
 
     private void ensureStatusAllowsAttachment(Solicitacao solicitacao) {
         if (solicitacao.getStatus() != StatusSolicitacao.PENDENTE) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitacao nao aceita anexos neste status.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitação não aceita anexos neste status.");
         }
     }
 
@@ -214,14 +214,14 @@ public class AttachmentService {
     private Conta getContaLogada() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getName() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario nao autenticado.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
 
         String usuario = auth.getName();
         return contaRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
-                        "Conta autenticada nao encontrada no banco."
+                        "Conta autenticada não encontrada no banco."
                 ));
     }
 }

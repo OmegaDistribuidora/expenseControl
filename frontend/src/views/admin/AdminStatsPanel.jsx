@@ -48,7 +48,7 @@ const ChartTooltip = ({ active, payload }) => {
         <span className="mono">{formatCurrency(data.valorTotal)}</span>
       </div>
       <div className="chart-tooltip__row">
-        <span>Aprovacoes</span>
+        <span>Aprovações</span>
         <span>{data.total}</span>
       </div>
     </div>
@@ -63,7 +63,7 @@ const StatusTooltip = ({ active, payload }) => {
     <div className="chart-tooltip">
       <div className="chart-tooltip__title">{data.label}</div>
       <div className="chart-tooltip__row">
-        <span>Solicitacoes</span>
+        <span>Solicitações</span>
         <span>{data.total}</span>
       </div>
     </div>
@@ -145,15 +145,15 @@ export const AdminStatsPanel = ({ stats, loading }) => {
     },
     {
       key: "aprovadas",
-      title: "Solicitacoes aprovadas",
+      title: "Solicitações aprovadas",
       value: totalAprovadas,
-      meta: "Total de solicitacoes aprovadas",
+      meta: "Total de solicitações aprovadas",
     },
     {
       key: "ticket-medio",
-      title: "Ticket medio",
+      title: "Ticket médio",
       value: formatCurrency(ticketMedio),
-      meta: "Media por solicitacao aprovada",
+      meta: "Média por solicitação aprovada",
     },
     {
       key: "top-categoria",
@@ -175,10 +175,10 @@ export const AdminStatsPanel = ({ stats, loading }) => {
     <section className="panel panel--stats">
       <div className="panel__header">
         <div className="card-top">
-          <h2 className="panel__title">Estatisticas</h2>
+          <h2 className="panel__title">Estatísticas</h2>
           <span className="small">{loading ? "Carregando..." : ""}</span>
         </div>
-        <p className="panel__subtitle">Resumo das solicitacoes aprovadas.</p>
+        <p className="panel__subtitle">Resumo das solicitações aprovadas.</p>
       </div>
       <div className="panel__content">
         {loading ? (
@@ -257,8 +257,8 @@ export const AdminStatsPanel = ({ stats, loading }) => {
 
               <div className="stats-section stats-section--chart">
                 <div className="stats-section__header">
-                  <h3 className="panel__title">Status das solicitacoes</h3>
-                  <span className="small">Todas as solicitacoes</span>
+                  <h3 className="panel__title">Status das solicitações</h3>
+                  <span className="small">Todas as solicitações</span>
                 </div>
                 <div className="chart-wrapper chart-wrapper--status">
                   <ResponsiveContainer width="100%" height="100%">

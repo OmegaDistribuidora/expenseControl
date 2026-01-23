@@ -25,9 +25,10 @@ public class AdminSolicitacaoController {
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sort", required = false) String sort,
             @RequestParam(value = "q", required = false) String query
     ) {
-        return solicitacaoService.listarParaAdmin(status, page, size, query);
+        return solicitacaoService.listarParaAdmin(status, page, size, sort, query);
     }
 
     @GetMapping("/estatisticas")

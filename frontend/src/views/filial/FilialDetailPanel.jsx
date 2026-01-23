@@ -33,11 +33,11 @@ export const FilialDetailPanel = ({
     <section className="panel panel--detail">
       <div className="panel__header">
         <h2 className="panel__title">Detalhes</h2>
-        <p className="panel__subtitle">Status e aprovacao da solicitacao.</p>
+        <p className="panel__subtitle">Status e aprovação da solicitação.</p>
       </div>
       <div className="panel__content">
         {!selected ? (
-          <div className="list-empty">Selecione uma solicitacao.</div>
+          <div className="list-empty">Selecione uma solicitação.</div>
         ) : (
           <div className="detail-card">
             <div className="detail-header">
@@ -86,7 +86,7 @@ export const FilialDetailPanel = ({
               <span className="detail-label">Pedido de ajuste</span>
               {selected.status === "PENDENTE_INFO" ? (
                 <>
-                  <p>{selected.comentarioDecisao || "Sem comentario do admin."}</p>
+                  <p>{selected.comentarioDecisao || "Sem comentário do admin."}</p>
                   <div className="actions actions--end">
                     <button className="btn btn--primary" type="button" onClick={onStartReenvio}>
                       Editar para reenvio
@@ -94,13 +94,13 @@ export const FilialDetailPanel = ({
                   </div>
                 </>
               ) : (
-                <p className="small">Nenhum pedido de ajuste para esta solicitacao.</p>
+                <p className="small">Nenhum pedido de ajuste para esta solicitação.</p>
               )}
             </div>
 
             {selected.status !== "PENDENTE_INFO" && selected.comentarioDecisao && (
               <div className="detail-block">
-                <span className="detail-label">Comentario do admin</span>
+              <span className="detail-label">Comentário do admin</span>
                 <p>{selected.comentarioDecisao}</p>
               </div>
             )}
@@ -111,12 +111,12 @@ export const FilialDetailPanel = ({
             </div>
 
             <div className="detail-block">
-              <span className="detail-label">Observacoes</span>
+              <span className="detail-label">Observações</span>
               <p>{selected.observacoes || "-"}</p>
             </div>
 
             <div className="detail-block">
-              <span className="detail-label">Itens da solicitacao</span>
+              <span className="detail-label">Itens da solicitação</span>
               {selected.linhas.length === 0 ? (
                 <p className="small">Sem itens adicionados ainda.</p>
               ) : (
@@ -150,7 +150,7 @@ export const FilialDetailPanel = ({
                   disabled={!canAttachMoreExisting || attachmentsLoading || attachmentsUploading || isSubmitting}
                   onFiles={(files) => onUploadAttachments(files, selected.id)}
                   summaryText={detailUploadSummary}
-                  helpText="PDF/JPG/PNG ate 10MB. Maximo 5 anexos."
+                  helpText="PDF/JPG/PNG até 10MB. Máximo 5 anexos."
                 />
               </div>
 
@@ -213,9 +213,9 @@ export const FilialDetailPanel = ({
             </div>
 
             <div className="detail-block">
-              <span className="detail-label">Historico</span>
+              <span className="detail-label">Histórico</span>
               {history.length === 0 ? (
-                <p className="small">Sem registros no historico.</p>
+                <p className="small">Sem registros no histórico.</p>
               ) : (
                 <div className="history">
                   {history.map((item) => (

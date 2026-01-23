@@ -2,7 +2,7 @@ import { LogOut, Shield, Wallet } from "lucide-react";
 
 export const HeaderView = ({ profile, onLogout }) => {
   const isAdmin = profile.tipo === "ADMIN";
-  const subtitle = isAdmin ? "Visao administrativa" : "Solicitacoes da filial";
+  const subtitle = isAdmin ? "Visão administrativa" : "Solicitações da filial";
   const metaParts = [profile.nome, profile.tipo, profile.filial].filter(Boolean);
   const metaText = metaParts.join(" • ");
 

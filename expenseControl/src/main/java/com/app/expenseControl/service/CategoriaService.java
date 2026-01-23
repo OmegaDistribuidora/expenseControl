@@ -22,7 +22,7 @@ public class CategoriaService {
     public CategoriaResponseDTO criar(CategoriaCreateDTO dto) {
         String nome = dto.nome().trim();
         if (categoriaRepository.existsByNomeIgnoreCase(nome)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe uma categoria com esse nome.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma categoria com esse nome.");
         }
 
         Categoria cat = Categoria.builder()
@@ -44,7 +44,7 @@ public class CategoriaService {
 
     public CategoriaResponseDTO inativar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada."));
 
         if (Boolean.TRUE.equals(categoria.getAtiva())) {
             categoria.setAtiva(false);

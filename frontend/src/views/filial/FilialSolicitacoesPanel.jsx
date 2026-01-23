@@ -16,9 +16,9 @@ export const FilialSolicitacoesPanel = ({
 }) => {
   const hasSearch = search.trim().length > 0;
   const showListSkeleton = loading && solicitacoes.length === 0;
-  const listCountLabel = `${solicitacoes.length} de ${solicitacoesTotal} solicitacoes`;
+  const listCountLabel = `${solicitacoes.length} de ${solicitacoesTotal} solicitações`;
   const totalPagesSafe = Math.max(totalPages || 0, 1);
-  const pageLabel = `Pagina ${Math.min(page + 1, totalPagesSafe)} de ${totalPagesSafe}`;
+  const pageLabel = `Página ${Math.min(page + 1, totalPagesSafe)} de ${totalPagesSafe}`;
   const canGoPrevPage = page > 0;
   const canGoNextPage = totalPages > 0 && page + 1 < totalPages;
   const showPageNav = totalPages > 1;
@@ -37,7 +37,7 @@ export const FilialSolicitacoesPanel = ({
     <section className="panel panel--list">
       <div className="panel__header">
         <div className="card-top">
-          <h2 className="panel__title">Solicitacoes recentes</h2>
+          <h2 className="panel__title">Solicitações recentes</h2>
           <span className="small">{loading ? "Carregando..." : ""}</span>
         </div>
         <p className="panel__subtitle">Clique para ver detalhes.</p>
@@ -49,8 +49,8 @@ export const FilialSolicitacoesPanel = ({
               type="search"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Titulo, categoria ou fornecedor"
-              aria-label="Buscar solicitacoes"
+              placeholder="Título, categoria ou fornecedor"
+              aria-label="Buscar solicitações"
             />
           </div>
           <div className="field">
@@ -60,7 +60,7 @@ export const FilialSolicitacoesPanel = ({
               <option value="OLD">Mais antigas</option>
               <option value="VALUE_DESC">Maior valor</option>
               <option value="VALUE_ASC">Menor valor</option>
-              <option value="TITLE">Titulo A-Z</option>
+              <option value="TITLE">Título A-Z</option>
             </select>
           </div>
         </div>
@@ -79,7 +79,7 @@ export const FilialSolicitacoesPanel = ({
           </div>
         ) : solicitacoes.length === 0 ? (
           <div className="list-empty">
-            {hasSearch ? "Nenhuma solicitacao encontrada para a busca." : "Nenhuma solicitacao cadastrada."}
+            {hasSearch ? "Nenhuma solicitação encontrada para a busca." : "Nenhuma solicitação cadastrada."}
           </div>
         ) : (
           <>
@@ -120,7 +120,7 @@ export const FilialSolicitacoesPanel = ({
                     onClick={handlePrevPage}
                     disabled={!canGoPrevPage || loading}
                   >
-                    Pagina anterior
+                    Página anterior
                   </button>
                   <button
                     className="btn btn--ghost btn--sm"
@@ -128,7 +128,7 @@ export const FilialSolicitacoesPanel = ({
                     onClick={handleNextPage}
                     disabled={!canGoNextPage || loading}
                   >
-                    Proxima pagina
+                    Próxima página
                   </button>
                 </div>
               </div>

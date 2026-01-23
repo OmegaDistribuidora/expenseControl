@@ -27,7 +27,7 @@ public class ApiExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList();
 
-        return buildResponse(HttpStatus.BAD_REQUEST, "Validacao invalida.", details, request);
+        return buildResponse(HttpStatus.BAD_REQUEST, "Validação inválida.", details, request);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -39,7 +39,7 @@ public class ApiExceptionHandler {
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .toList();
 
-        return buildResponse(HttpStatus.BAD_REQUEST, "Validacao invalida.", details, request);
+        return buildResponse(HttpStatus.BAD_REQUEST, "Validação inválida.", details, request);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -61,7 +61,7 @@ public class ApiExceptionHandler {
             HttpServletRequest request
     ) {
         String message = (ex.getMessage() == null || ex.getMessage().isBlank())
-                ? "Requisicao invalida."
+                ? "Requisição inválida."
                 : ex.getMessage();
 
         return buildResponse(HttpStatus.BAD_REQUEST, message, List.of(), request);
@@ -72,7 +72,7 @@ public class ApiExceptionHandler {
             IllegalStateException ex,
             HttpServletRequest request
     ) {
-        log.error("Erro interno na requisicao {} {}", request.getMethod(), request.getRequestURI(), ex);
+        log.error("Erro interno na requisição {} {}", request.getMethod(), request.getRequestURI(), ex);
         String message = (ex.getMessage() == null || ex.getMessage().isBlank())
                 ? "Erro interno."
                 : ex.getMessage();
@@ -89,7 +89,7 @@ public class ApiExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
-        log.error("Erro inesperado na requisicao {} {}", request.getMethod(), request.getRequestURI(), ex);
+        log.error("Erro inesperado na requisição {} {}", request.getMethod(), request.getRequestURI(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno.", List.of(), request);
     }
 

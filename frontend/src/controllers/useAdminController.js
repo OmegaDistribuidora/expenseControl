@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_PAGE_SIZE } from "./constants.js";
 import { normalizePageResponse } from "./utils/pagination.js";
-import { sortSolicitacoes } from "./utils/search.js";
 import { parseMoneyInput } from "./utils/money.js";
+import { getErrorMessage } from "./utils/errors.js";
 import { validateCategoryForm, validateDecisionForm, validatePedidoInfo } from "./utils/validation.js";
 
 export const useAdminController = ({ requestAuthed, showNotice, openConfirm, enabled }) => {
@@ -48,6 +48,11 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     setPage(0);
   };
 
+  const updateSort = (value) => {
+    setSort(value);
+    setPage(0);
+  };
+
   const loadStats = useCallback(
     async (force = false) => {
       if (!enabled) return;
@@ -58,8 +63,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
         const statsResponse = await requestAuthed("/admin/solicitacoes/estatisticas");
         setStats(statsResponse);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Erro ao carregar estatisticas.";
-        showNotice("error", message);
+        showNotice("error", getErrorMessage(error, "Erro ao carregar estatísticas."));
       } finally {
         setStatsLoading(false);
       }
@@ -73,7 +77,8 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
       const statusQuery = statusFilter === "TODOS" ? "" : `status=${statusFilter}`;
       const searchQuery = search.trim();
       const searchParam = searchQuery ? `q=${encodeURIComponent(searchQuery)}` : "";
-      const queryString = [statusQuery, searchParam, `page=${page}`, `size=${DEFAULT_PAGE_SIZE}`]
+      const sortParam = sort ? `sort=${sort}` : "";
+      const queryString = [statusQuery, searchParam, sortParam, `page=${page}`, `size=${DEFAULT_PAGE_SIZE}`]
         .filter(Boolean)
         .join("&");
       const [categoriesResponse, solicitacoesResponse] = await Promise.all([
@@ -86,35 +91,33 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
       setTotal(pagina.totalElements);
       setTotalPages(pagina.totalPages);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao carregar dados.";
-      showNotice("error", message);
+      showNotice("error", getErrorMessage(error, "Erro ao carregar dados."));
     } finally {
       setLoading(false);
     }
-  }, [page, requestAuthed, search, showNotice, statusFilter]);
+  }, [page, requestAuthed, search, showNotice, sort, statusFilter]);
 
   useEffect(() => {
     if (!enabled) return;
     void loadAdminData();
   }, [enabled, loadAdminData]);
 
-  const filteredSolicitacoes = useMemo(() => {
-    return sortSolicitacoes(solicitacoes, sort);
-  }, [solicitacoes, sort]);
+  useEffect(() => {
+    const lastPage = totalPages > 0 ? totalPages - 1 : 0;
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, totalPages]);
 
   useEffect(() => {
-    if (filteredSolicitacoes.length === 0) {
-      if (!search.trim() && solicitacoes.length === 0 && page > 0) {
-        setPage((prev) => Math.max(prev - 1, 0));
-        return;
-      }
+    if (solicitacoes.length === 0) {
       setSelectedId(null);
       return;
     }
-    if (!filteredSolicitacoes.some((item) => item.id === selectedId)) {
-      setSelectedId(filteredSolicitacoes[0].id);
+    if (!solicitacoes.some((item) => item.id === selectedId)) {
+      setSelectedId(solicitacoes[0].id);
     }
-  }, [filteredSolicitacoes, selectedId, search, page, solicitacoes.length]);
+  }, [solicitacoes, selectedId, search, page]);
 
   const selected = useMemo(() => {
     return solicitacoes.find((item) => item.id === selectedId) || null;
@@ -150,8 +153,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
       setCategoryForm({ nome: "", descricao: "" });
       await loadAdminData();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao criar categoria.";
-      showNotice("error", message);
+      showNotice("error", getErrorMessage(error, "Erro ao criar categoria."));
     } finally {
       setCategorySaving(false);
     }
@@ -174,8 +176,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
           showNotice("success", "Categoria inativada.");
           await loadAdminData();
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Erro ao inativar categoria.";
-          showNotice("error", message);
+          showNotice("error", getErrorMessage(error, "Erro ao inativar categoria."));
         } finally {
           setCategorySaving(false);
         }
@@ -185,7 +186,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
 
   const handleDecision = async (decisao) => {
     if (!selected || selected.status !== "PENDENTE") {
-      showNotice("error", "Selecione uma solicitacao pendente.");
+      showNotice("error", "Selecione uma solicitação pendente.");
       return;
     }
     if (decisionLoading) return;
@@ -211,13 +212,12 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
           method: "PATCH",
           body: JSON.stringify(payload),
         });
-        showNotice("success", "Decisao registrada.");
+        showNotice("success", "Decisão registrada.");
         setDecisionForm({ valorAprovado: "", comentario: "" });
         await loadAdminData();
         await loadStats(true);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Erro ao decidir solicitacao.";
-        showNotice("error", message);
+        showNotice("error", getErrorMessage(error, "Erro ao decidir solicitação."));
       } finally {
         setDecisionLoading(false);
       }
@@ -225,8 +225,8 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
 
     if (decisao === "REPROVADO") {
       openConfirm({
-        title: "Reprovar solicitacao",
-        message: "Tem certeza que deseja reprovar esta solicitacao?",
+        title: "Reprovar solicitação",
+        message: "Tem certeza que deseja reprovar esta solicitação?",
         confirmLabel: "Reprovar",
         intent: "danger",
         onConfirm: applyDecision,
@@ -239,16 +239,16 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
 
   const handlePedidoInfo = async () => {
     if (!selected || selected.status !== "PENDENTE") {
-      showNotice("error", "Selecione uma solicitacao pendente.");
-      return;
+      showNotice("error", "Selecione uma solicitação pendente.");
+      return false;
     }
-    if (pedidoInfoLoading) return;
+    if (pedidoInfoLoading) return false;
 
     const comentario = pedidoInfoForm.comentario.trim();
     const validationError = validatePedidoInfo(comentario);
     if (validationError) {
       showNotice("error", validationError);
-      return;
+      return false;
     }
 
     setPedidoInfoLoading(true);
@@ -260,9 +260,10 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
       showNotice("success", "Pedido de ajuste enviado.");
       setPedidoInfoForm({ comentario: "" });
       await loadAdminData();
+      return true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao pedir ajuste.";
-      showNotice("error", message);
+      showNotice("error", getErrorMessage(error, "Erro ao pedir ajuste."));
+      return false;
     } finally {
       setPedidoInfoLoading(false);
     }
@@ -270,12 +271,12 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
 
   const handleDeleteSolicitacao = async () => {
     if (!selected) {
-      showNotice("error", "Selecione uma solicitacao.");
+      showNotice("error", "Selecione uma solicitação.");
       return;
     }
     openConfirm({
-      title: "Excluir solicitacao",
-      message: "Tem certeza que deseja excluir esta solicitacao? Essa acao nao pode ser desfeita.",
+      title: "Excluir solicitação",
+      message: "Tem certeza que deseja excluir esta solicitação? Essa ação não pode ser desfeita.",
       confirmLabel: "Excluir",
       intent: "danger",
       onConfirm: async () => {
@@ -285,12 +286,11 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
           await requestAuthed(`/admin/solicitacoes/${selected.id}`, {
             method: "DELETE",
           });
-          showNotice("success", "Solicitacao excluida.");
+          showNotice("success", "Solicitação excluída.");
           await loadAdminData();
           await loadStats(true);
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Erro ao excluir solicitacao.";
-          showNotice("error", message);
+          showNotice("error", getErrorMessage(error, "Erro ao excluir solicitação."));
         } finally {
           setDeleteLoading(false);
         }
@@ -322,7 +322,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
 
   return {
     categories,
-    solicitacoes: filteredSolicitacoes,
+    solicitacoes,
     solicitacoesTotal: total,
     selectedId,
     selected,
@@ -344,7 +344,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     setSelectedId,
     setStatusFilter: updateStatusFilter,
     setSearch: updateSearch,
-    setSort,
+    setSort: updateSort,
     setPage,
     updateCategoryForm,
     updateDecisionForm,

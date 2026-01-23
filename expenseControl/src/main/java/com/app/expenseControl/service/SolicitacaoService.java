@@ -74,7 +74,7 @@ public class SolicitacaoService {
         ensureFilial(conta);
 
         Categoria categoria = categoriaRepository.findById(dto.categoriaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada."));
         if (Boolean.FALSE.equals(categoria.getAtiva())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria inativa.");
         }
@@ -110,18 +110,18 @@ public class SolicitacaoService {
         ensureFilial(conta);
 
         Solicitacao s = solicitacaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada."));
 
         if (!conta.getFilial().equals(s.getFilial())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitacao nao pertence a filial.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitação não pertence à filial.");
         }
 
         if (s.getStatus() != StatusSolicitacao.PENDENTE_INFO) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitacao nao esta aguardando informacoes.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitação não está aguardando informações.");
         }
 
         Categoria categoria = categoriaRepository.findById(dto.dados().categoriaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada."));
         if (Boolean.FALSE.equals(categoria.getAtiva())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria inativa.");
         }
@@ -165,18 +165,18 @@ public class SolicitacaoService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<SolicitacaoResponseDTO> listarDaFilial(int page, int size, String query) {
+    public PageResponse<SolicitacaoResponseDTO> listarDaFilial(int page, int size, String sort, String query) {
         Conta conta = getContaLogada();
         ensureFilial(conta);
 
-        Pageable pageable = buildPageable(page, size, Sort.by("enviadoEm").descending());
+        Pageable pageable = buildPageable(page, size, resolveSort(sort));
         String term = normalizeSearchTerm(query);
         Long searchId = parseSearchId(query);
         StatusSolicitacao statusSearch = parseSearchStatus(query);
         Page<Solicitacao> solicitacoes;
         if (term == null) {
             solicitacoes = solicitacaoRepository
-                    .findByFilialOrderByEnviadoEmDesc(conta.getFilial(), pageable);
+                    .findByFilial(conta.getFilial(), pageable);
         } else {
             solicitacoes = solicitacaoRepository.searchByFilial(
                     conta.getFilial(),
@@ -197,10 +197,10 @@ public class SolicitacaoService {
         ensureFilial(conta);
 
         Solicitacao s = solicitacaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada."));
 
         if (!conta.getFilial().equals(s.getFilial())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitacao nao pertence a filial.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitação não pertence à filial.");
         }
 
         List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(s.getId());
@@ -224,11 +224,11 @@ public class SolicitacaoService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<SolicitacaoResponseDTO> listarParaAdmin(String status, int page, int size, String query) {
+    public PageResponse<SolicitacaoResponseDTO> listarParaAdmin(String status, int page, int size, String sort, String query) {
         Conta conta = getContaLogada();
         ensureAdmin(conta);
 
-        Pageable pageable = buildPageable(page, size, Sort.by("enviadoEm").descending());
+        Pageable pageable = buildPageable(page, size, resolveSort(sort));
         StatusSolicitacao statusEnum = parseStatus(status);
         String term = normalizeSearchTerm(query);
         Long searchId = parseSearchId(query);
@@ -237,7 +237,7 @@ public class SolicitacaoService {
         if (term == null) {
             solicitacoes = statusEnum == null
                     ? solicitacaoRepository.findAll(pageable)
-                    : solicitacaoRepository.findByStatusOrderByEnviadoEmDesc(statusEnum, pageable);
+                    : solicitacaoRepository.findByStatus(statusEnum, pageable);
         } else if (statusEnum == null) {
             solicitacoes = solicitacaoRepository.searchAll(
                     term,
@@ -282,10 +282,10 @@ public class SolicitacaoService {
         ensureAdmin(conta);
 
         Solicitacao s = solicitacaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada."));
 
         if (s.getStatus() != StatusSolicitacao.PENDENTE) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitacao nao esta pendente.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitação não está pendente.");
         }
 
         s.setStatus(StatusSolicitacao.PENDENTE_INFO);
@@ -309,10 +309,10 @@ public class SolicitacaoService {
         ensureAdmin(conta);
 
         Solicitacao s = solicitacaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada."));
 
         if (s.getStatus() != StatusSolicitacao.PENDENTE) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitacao nao esta pendente.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solicitação não está pendente.");
         }
 
         String decisao = dto.decisao().trim().toUpperCase();
@@ -320,7 +320,7 @@ public class SolicitacaoService {
         if (!decisao.equals("APROVADO") && !decisao.equals("REPROVADO")) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Decisao invalida. Use APROVADO ou REPROVADO."
+                    "Decisão inválida. Use APROVADO ou REPROVADO."
             );
         }
 
@@ -352,7 +352,7 @@ public class SolicitacaoService {
         Conta conta = getContaLogada();
         ensureAdmin(conta);
         Solicitacao s = solicitacaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada."));
         solicitacaoHistoricoRepository.deleteBySolicitacaoId(s.getId());
         solicitacaoLinhaRepository.deleteBySolicitacaoId(s.getId());
         attachmentService.deleteAllForSolicitacao(s.getId());
@@ -379,7 +379,7 @@ public class SolicitacaoService {
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Status invalido. Use PENDENTE, PENDENTE_INFO, APROVADO ou REPROVADO."
+                    "Status inválido. Use PENDENTE, PENDENTE_INFO, APROVADO ou REPROVADO."
             );
         }
     }
@@ -422,6 +422,32 @@ public class SolicitacaoService {
         }
     }
 
+    private Sort resolveSort(String sortKey) {
+        String key = sortKey == null ? "RECENT" : sortKey.trim().toUpperCase();
+        return switch (key) {
+            case "OLD" -> Sort.by(
+                    Sort.Order.asc("enviadoEm").nullsLast(),
+                    Sort.Order.asc("id")
+            );
+            case "VALUE_DESC" -> Sort.by(
+                    Sort.Order.desc("valorEstimado").nullsLast(),
+                    Sort.Order.desc("id")
+            );
+            case "VALUE_ASC" -> Sort.by(
+                    Sort.Order.asc("valorEstimado").nullsLast(),
+                    Sort.Order.asc("id")
+            );
+            case "TITLE" -> Sort.by(
+                    Sort.Order.asc("titulo").ignoreCase().nullsLast(),
+                    Sort.Order.asc("id")
+            );
+            default -> Sort.by(
+                    Sort.Order.desc("enviadoEm").nullsLast(),
+                    Sort.Order.desc("id")
+            );
+        };
+    }
+
     private Pageable buildPageable(int page, int size, Sort sort) {
         int safePage = Math.max(0, page);
         int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
@@ -431,14 +457,14 @@ public class SolicitacaoService {
     private Conta getContaLogada() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getName() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario nao autenticado.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
 
         String usuario = auth.getName();
         return contaRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
-                        "Conta autenticada nao encontrada no banco."
+                        "Conta autenticada não encontrada no banco."
                 ));
     }
 

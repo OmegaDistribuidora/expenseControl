@@ -34,7 +34,7 @@ export const FilialFormPanel = ({
     ? "Enviando anexos..."
     : `${pendingCount}/${maxAttachments} anexos na fila`;
   const draftUploadHelp =
-    "PDF/JPG/PNG ate 10MB. Os anexos sao enviados apos salvar a solicitacao.";
+    "PDF/JPG/PNG até 10MB. Os anexos são enviados após salvar a solicitação.";
 
   const handleDropFiles = (files) => {
     if (isEditing && uploadTargetId) {
@@ -47,7 +47,7 @@ export const FilialFormPanel = ({
   return (
     <section className="panel panel--form">
       <div className="panel__header">
-        <h2 className="panel__title">{isEditing ? "Reenvio de solicitacao" : "Nova solicitacao"}</h2>
+        <h2 className="panel__title">{isEditing ? "Reenvio de solicitação" : "Nova solicitação"}</h2>
         <p className="panel__subtitle">
           {isEditing ? "Atualize os dados e reenvie para o admin." : "Registre uma nova demanda da filial."}
         </p>
@@ -56,7 +56,7 @@ export const FilialFormPanel = ({
         {isEditing && (
           <div className="info-bar">
             <span className="info-label">Reenvio ativo</span>
-            <span className="info-value">A solicitacao sera reenviada ao admin.</span>
+            <span className="info-value">A solicitação será reenviada ao admin.</span>
           </div>
         )}
 
@@ -81,7 +81,7 @@ export const FilialFormPanel = ({
             </div>
 
             <div className="field">
-              <label>Titulo</label>
+              <label>Título</label>
               <input
                 value={draft.titulo}
                 onChange={(event) => onUpdateDraft({ titulo: event.target.value })}
@@ -102,7 +102,7 @@ export const FilialFormPanel = ({
           </div>
 
           <div className="field">
-            <label>Descricao / Justificativa</label>
+            <label>Descrição / Justificativa</label>
             <textarea
               rows={4}
               value={draft.descricao}
@@ -160,7 +160,7 @@ export const FilialFormPanel = ({
 
           <div className="field-grid">
             <div className="field">
-              <label>Observacoes</label>
+              <label>Observações</label>
               <textarea
                 rows={3}
                 value={draft.observacoes}
@@ -171,7 +171,7 @@ export const FilialFormPanel = ({
 
             {isEditing && (
               <div className="field">
-                <label>Comentario para o admin</label>
+                <label>Comentário para o admin</label>
                 <textarea
                   rows={3}
                   value={reenvioComentario}
@@ -183,7 +183,7 @@ export const FilialFormPanel = ({
           </div>
 
           <div className="section-title">Anexos</div>
-          <p className="panel__subtitle">PDF/JPG/PNG ate 10MB. Maximo 5 anexos por solicitacao.</p>
+          <p className="panel__subtitle">PDF/JPG/PNG até 10MB. Máximo 5 anexos por solicitação.</p>
           <div className="field file-field">
             <label>Anexar arquivos</label>
             <FileDropzone
@@ -235,7 +235,7 @@ export const FilialFormPanel = ({
             </>
           )}
 
-          <div className="section-title">Itens da solicitacao</div>
+          <div className="section-title">Itens da solicitação</div>
           <p className="panel__subtitle">Descreva cada item e o valor estimado por item.</p>
           <div className="line-list">
             {draft.linhas.map((linha, index) => (
@@ -267,7 +267,7 @@ export const FilialFormPanel = ({
                   </div>
                 </div>
                 <div className="field">
-                  <label>Observacao do item</label>
+                  <label>Observação do item</label>
                   <input
                     value={linha.observacao}
                     onChange={(event) => onUpdateLine(index, { observacao: event.target.value })}
@@ -303,8 +303,8 @@ export const FilialFormPanel = ({
                   ? "Reenviando..."
                   : "Enviando..."
                 : isEditing
-                  ? "Reenviar solicitacao"
-                  : "Enviar solicitacao"}
+                  ? "Reenviar solicitação"
+                  : "Enviar solicitação"}
             </button>
           </div>
         </form>

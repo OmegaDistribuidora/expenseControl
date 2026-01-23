@@ -1,3 +1,4 @@
+import { useEffect, useId, useState } from "react";
 import {
   formatCurrency,
   formatDateTime,
@@ -32,10 +33,49 @@ export const AdminDetailPanel = ({
   const isDeleteBusy = deleteLoading || decisionLoading || pedidoInfoLoading;
   const history = selected?.historico || [];
   const canDeleteAttachment = selected?.status === "PENDENTE";
-  const detailTitle = isAprovadasTab ? "Detalhes" : "Decisao";
+  const detailTitle = isAprovadasTab ? "Detalhes" : "Decisão";
   const detailSubtitle = isAprovadasTab ? "" : "Avalie e aprove ou reprove.";
-  const leftColumnTitle = "Informacoes";
+  const leftColumnTitle = "Informações";
   const rightColumnTitle = "Itens e anexos";
+  const [pedidoInfoOpen, setPedidoInfoOpen] = useState(false);
+  const pedidoInfoTitleId = useId();
+  const pedidoInfoDescId = useId();
+  const pedidoInfoFieldId = useId();
+
+  useEffect(() => {
+    setPedidoInfoOpen(false);
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (!pedidoInfoOpen) return;
+    const handleKey = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (!pedidoInfoLoading) {
+          setPedidoInfoOpen(false);
+          setPedidoInfoSubmitted(false);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [pedidoInfoOpen, pedidoInfoLoading]);
+
+  const handleOpenPedidoInfo = () => {
+    setPedidoInfoOpen(true);
+  };
+
+  const handleClosePedidoInfo = () => {
+    if (pedidoInfoLoading) return;
+    setPedidoInfoOpen(false);
+  };
+
+  const handleConfirmPedidoInfo = async () => {
+    const success = await onPedidoInfo();
+    if (success) {
+      setPedidoInfoOpen(false);
+    }
+  };
 
   return (
     <section className="panel panel--detail">
@@ -43,7 +83,7 @@ export const AdminDetailPanel = ({
       {detailSubtitle && <p className="panel__subtitle">{detailSubtitle}</p>}
 
       {!selected ? (
-        <div className="list-empty">Selecione uma solicitacao.</div>
+        <div className="list-empty">Selecione uma solicitação.</div>
       ) : (
         <div className="detail-card">
           <div className="detail-header">
@@ -105,13 +145,13 @@ export const AdminDetailPanel = ({
               </div>
 
               <div className="detail-block">
-                <span className="detail-label">Observacoes</span>
+                <span className="detail-label">Observações</span>
                 <p>{selected.observacoes || "-"}</p>
               </div>
 
               {selected.comentarioDecisao && (
                 <div className="detail-block">
-                  <span className="detail-label">Comentario atual</span>
+                  <span className="detail-label">Comentário atual</span>
                   <p>{selected.comentarioDecisao}</p>
                 </div>
               )}
@@ -122,20 +162,11 @@ export const AdminDetailPanel = ({
                   <p className="small">
                     Use esse campo quando precisar de mais detalhes da filial antes de decidir.
                   </p>
-                  <div className="field">
-                    <label>Comentario para a filial</label>
-                    <textarea
-                      value={pedidoInfoForm.comentario}
-                      onChange={(event) => onUpdatePedidoInfoForm({ comentario: event.target.value })}
-                      maxLength={500}
-                      disabled={!canDecide || isPedidoInfoBusy}
-                    />
-                  </div>
                   <div className="actions actions--end">
                     <button
                       className="btn btn--ghost"
                       type="button"
-                      onClick={onPedidoInfo}
+                      onClick={handleOpenPedidoInfo}
                       disabled={!canDecide || isPedidoInfoBusy}
                     >
                       {pedidoInfoLoading ? "Enviando..." : "Pedir ajuste"}
@@ -146,7 +177,7 @@ export const AdminDetailPanel = ({
 
               {!isAprovadasTab ? (
                 <div className="detail-block detail-block--decision">
-                  <span className="detail-label">Decisao</span>
+                  <span className="detail-label">Decisão</span>
                   <div className="field">
                     <label>Valor aprovado</label>
                     <div className="money-field">
@@ -166,7 +197,7 @@ export const AdminDetailPanel = ({
                   </div>
 
                   <div className="field">
-                    <label>Comentario da decisao</label>
+                    <label>Comentário da decisão</label>
                     <textarea
                       value={decisionForm.comentario}
                       onChange={(event) => onUpdateDecisionForm({ comentario: event.target.value })}
@@ -201,14 +232,14 @@ export const AdminDetailPanel = ({
                         onClick={onDeleteSolicitacao}
                         disabled={isDeleteBusy}
                       >
-                        {deleteLoading ? "Excluindo..." : "Excluir solicitacao"}
+                        {deleteLoading ? "Excluindo..." : "Excluir solicitação"}
                       </button>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="detail-block">
-                  <span className="detail-label">Acoes</span>
+                  <span className="detail-label">Ações</span>
                   <div className="actions actions--end">
                     <button
                       className="btn btn--danger"
@@ -216,7 +247,7 @@ export const AdminDetailPanel = ({
                       onClick={onDeleteSolicitacao}
                       disabled={isDeleteBusy}
                     >
-                      {deleteLoading ? "Excluindo..." : "Excluir solicitacao"}
+                      {deleteLoading ? "Excluindo..." : "Excluir solicitação"}
                     </button>
                   </div>
                 </div>
@@ -226,7 +257,7 @@ export const AdminDetailPanel = ({
             <div className="detail-column">
               <div className="section-title">{rightColumnTitle}</div>
               <div className="detail-block">
-                <span className="detail-label">Itens da solicitacao</span>
+                <span className="detail-label">Itens da solicitação</span>
                 {selected.linhas.length === 0 ? (
                   <p className="small">Sem itens adicionados ainda.</p>
                 ) : (
@@ -310,9 +341,9 @@ export const AdminDetailPanel = ({
               </div>
 
               <div className="detail-block">
-                <span className="detail-label">Historico</span>
+                <span className="detail-label">Histórico</span>
                 {history.length === 0 ? (
-                  <p className="small">Sem registros no historico.</p>
+                  <p className="small">Sem registros no histórico.</p>
                 ) : (
                   <div className="history">
                     {history.map((item) => (
@@ -332,6 +363,57 @@ export const AdminDetailPanel = ({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pedidoInfoOpen && !isAprovadasTab && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              handleClosePedidoInfo();
+            }
+          }}
+        >
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={pedidoInfoTitleId}
+            aria-describedby={pedidoInfoDescId}
+          >
+            <h3 className="modal__title" id={pedidoInfoTitleId}>
+              Solicitar ajustes
+            </h3>
+            <p className="modal__message" id={pedidoInfoDescId}>
+              Descreva os ajustes necessários para a filial.
+            </p>
+            {selected?.titulo && <p className="small">Solicitação: {selected.titulo}</p>}
+            <div className="field">
+              <label htmlFor={pedidoInfoFieldId}>Motivo / Observações</label>
+              <textarea
+                id={pedidoInfoFieldId}
+                value={pedidoInfoForm.comentario}
+                onChange={(event) => onUpdatePedidoInfoForm({ comentario: event.target.value })}
+                maxLength={500}
+                disabled={!canDecide || isPedidoInfoBusy}
+              />
+            </div>
+            <div className="modal__actions">
+              <button className="btn btn--ghost" type="button" onClick={handleClosePedidoInfo} disabled={isPedidoInfoBusy}>
+                Cancelar
+              </button>
+              <button
+                className="btn btn--primary"
+                type="button"
+                onClick={() => void handleConfirmPedidoInfo()}
+                disabled={!canDecide || isPedidoInfoBusy}
+              >
+                {pedidoInfoLoading ? "Enviando..." : "Confirmar"}
+              </button>
             </div>
           </div>
         </div>

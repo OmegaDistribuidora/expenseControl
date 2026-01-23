@@ -1,0 +1,83 @@
+.detail-card {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.detail-card > * {
+  min-width: 0;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.detail-subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.detail-grid {
+  --card-bg: var(--surface-soft);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  padding: 14px 16px;
+}
+
+.detail-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.detail-column {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-item {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.detail-block {
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  animation: fadeUp 0.45s ease both;
+}
+
+.detail-block p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
+}

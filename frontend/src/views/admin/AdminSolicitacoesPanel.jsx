@@ -19,9 +19,9 @@ export const AdminSolicitacoesPanel = ({
   onSearchChange,
   onSortChange,
 }) => {
-  const listTitle = isAprovadasTab ? "Solicitacoes aprovadas" : "Solicitacoes";
+  const listTitle = isAprovadasTab ? "Solicitações aprovadas" : "Solicitações";
   const listSubtitle = isAprovadasTab
-    ? "Consulte itens ja aprovados."
+    ? "Consulte itens já aprovados."
     : "Filtre e selecione para decidir.";
   const statusSummaryLabel = isAprovadasTab
     ? "Aprovadas"
@@ -31,7 +31,7 @@ export const AdminSolicitacoesPanel = ({
 
   const hasSearch = search.trim().length > 0;
   const showListSkeleton = loading && solicitacoes.length === 0;
-  const listCountLabel = `${solicitacoes.length} de ${solicitacoesTotal} solicitacoes`;
+  const listCountLabel = `${solicitacoes.length} de ${solicitacoesTotal} solicitações`;
   const hasSolicitacoes = solicitacoes.length > 0;
   const selectedIndex = hasSolicitacoes
     ? solicitacoes.findIndex((item) => item.id === selectedId)
@@ -41,10 +41,10 @@ export const AdminSolicitacoesPanel = ({
   const canGoPrev = hasSolicitacoes && currentIndex > 0;
   const canGoNext = hasSolicitacoes && currentIndex < solicitacoes.length - 1;
   const positionLabel = hasSolicitacoes
-    ? `${currentIndex + 1} de ${solicitacoes.length} solicitacoes`
-    : "0 solicitacoes";
+    ? `${currentIndex + 1} de ${solicitacoes.length} solicitações`
+    : "0 solicitações";
   const totalPagesSafe = Math.max(totalPages || 0, 1);
-  const pageLabel = `Pagina ${Math.min(page + 1, totalPagesSafe)} de ${totalPagesSafe}`;
+  const pageLabel = `Página ${Math.min(page + 1, totalPagesSafe)} de ${totalPagesSafe}`;
   const canGoPrevPage = page > 0;
   const canGoNextPage = totalPages > 0 && page + 1 < totalPages;
   const showItemNav = hasSolicitacoes && solicitacoes.length > 1;
@@ -127,8 +127,8 @@ export const AdminSolicitacoesPanel = ({
               type="search"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={isAprovadasTab ? "Titulo ou filial" : "Titulo, filial ou categoria"}
-              aria-label="Buscar solicitacoes"
+              placeholder={isAprovadasTab ? "Título ou filial" : "Título, filial ou categoria"}
+              aria-label="Buscar solicitações"
             />
           </div>
           <div className="field">
@@ -141,7 +141,7 @@ export const AdminSolicitacoesPanel = ({
               <option value="OLD">Mais antigas</option>
               <option value="VALUE_DESC">Maior valor</option>
               <option value="VALUE_ASC">Menor valor</option>
-              <option value="TITLE">Titulo A-Z</option>
+              <option value="TITLE">Título A-Z</option>
             </select>
           </div>
         </div>
@@ -160,7 +160,7 @@ export const AdminSolicitacoesPanel = ({
         </div>
       ) : !currentItem ? (
         <div className="list-empty">
-          {hasSearch ? "Nenhuma solicitacao encontrada para a busca." : "Nenhuma solicitacao no filtro."}
+          {hasSearch ? "Nenhuma solicitação encontrada para a busca." : "Nenhuma solicitação no filtro."}
         </div>
       ) : (
         <>
@@ -211,7 +211,7 @@ export const AdminSolicitacoesPanel = ({
                   onClick={handleNext}
                   disabled={!canGoNext}
                 >
-                  Proxima
+                  Próxima
                 </button>
               </div>
             </div>
@@ -226,7 +226,7 @@ export const AdminSolicitacoesPanel = ({
                   onClick={handlePrevPage}
                   disabled={!canGoPrevPage || loading}
                 >
-                  Pagina anterior
+                  Página anterior
                 </button>
                 <button
                   className="btn btn--ghost btn--sm"
@@ -234,7 +234,7 @@ export const AdminSolicitacoesPanel = ({
                   onClick={handleNextPage}
                   disabled={!canGoNextPage || loading}
                 >
-                  Proxima pagina
+                  Próxima página
                 </button>
               </div>
             </div>

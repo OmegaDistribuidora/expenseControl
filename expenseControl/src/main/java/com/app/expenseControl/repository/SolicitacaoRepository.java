@@ -18,6 +18,8 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
     List<Solicitacao> findByStatusOrderByEnviadoEmDesc(StatusSolicitacao status);
     Page<Solicitacao> findByFilialOrderByEnviadoEmDesc(String filial, Pageable pageable);
     Page<Solicitacao> findByStatusOrderByEnviadoEmDesc(StatusSolicitacao status, Pageable pageable);
+    Page<Solicitacao> findByFilial(String filial, Pageable pageable);
+    Page<Solicitacao> findByStatus(StatusSolicitacao status, Pageable pageable);
     long countByStatus(StatusSolicitacao status);
 
     @Query("select sum(coalesce(s.valorAprovado, s.valorEstimado)) from Solicitacao s where s.status = :status")

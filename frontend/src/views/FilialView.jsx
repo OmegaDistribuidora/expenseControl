@@ -82,7 +82,7 @@ export const FilialView = ({
           onClick={handleViewTab}
         >
           <List className="tab__icon" aria-hidden="true" />
-          Minhas solicitacoes
+          Minhas solicitações
         </button>
       </div>
 

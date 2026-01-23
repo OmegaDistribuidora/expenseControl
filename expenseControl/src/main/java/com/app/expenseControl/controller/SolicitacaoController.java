@@ -34,9 +34,10 @@ public class SolicitacaoController {
     public PageResponse<SolicitacaoResponseDTO> listar(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sort", required = false) String sort,
             @RequestParam(value = "q", required = false) String query
     ) {
-        return solicitacaoService.listarDaFilial(page, size, query);
+        return solicitacaoService.listarDaFilial(page, size, sort, query);
     }
 
     @GetMapping("/{id}")

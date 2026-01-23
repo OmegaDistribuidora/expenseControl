@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_PAGE_SIZE } from "./constants.js";
 import { normalizePageResponse } from "./utils/pagination.js";
-import { sortSolicitacoes } from "./utils/search.js";
+import { getErrorMessage } from "./utils/errors.js";
 import {
   buildSolicitacaoPayload,
   emptyDraft,
@@ -29,10 +29,11 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
     try {
       const searchQuery = search.trim();
       const searchParam = searchQuery ? `q=${encodeURIComponent(searchQuery)}` : "";
+      const sortParam = sort ? `sort=${sort}` : "";
       const [categoriesResponse, solicitacoesResponse] = await Promise.all([
         requestAuthed("/categorias"),
         requestAuthed(
-          `/solicitacoes?${[searchParam, `page=${page}`, `size=${DEFAULT_PAGE_SIZE}`]
+          `/solicitacoes?${[searchParam, sortParam, `page=${page}`, `size=${DEFAULT_PAGE_SIZE}`]
             .filter(Boolean)
             .join("&")}`
         ),
@@ -43,39 +44,37 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
       setTotal(pagina.totalElements);
       setTotalPages(pagina.totalPages);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao carregar dados.";
-      showNotice("error", message);
+      showNotice("error", getErrorMessage(error, "Erro ao carregar dados."));
     } finally {
       setLoading(false);
     }
-  }, [page, requestAuthed, search, showNotice]);
+  }, [page, requestAuthed, search, showNotice, sort]);
 
   useEffect(() => {
     if (!enabled) return;
     void loadFilialData();
   }, [enabled, loadFilialData]);
 
-  const filteredSolicitacoes = useMemo(() => {
-    return sortSolicitacoes(solicitacoes, sort);
-  }, [solicitacoes, sort]);
+  useEffect(() => {
+    const lastPage = totalPages > 0 ? totalPages - 1 : 0;
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, totalPages]);
 
   const selected = useMemo(() => {
     return solicitacoes.find((item) => item.id === selectedId) || null;
   }, [solicitacoes, selectedId]);
 
   useEffect(() => {
-    if (filteredSolicitacoes.length === 0) {
-      if (!search.trim() && solicitacoes.length === 0 && page > 0) {
-        setPage((prev) => Math.max(prev - 1, 0));
-        return;
-      }
+    if (solicitacoes.length === 0) {
       setSelectedId(null);
       return;
     }
-    if (!filteredSolicitacoes.some((item) => item.id === selectedId)) {
-      setSelectedId(filteredSolicitacoes[0].id);
+    if (!solicitacoes.some((item) => item.id === selectedId)) {
+      setSelectedId(solicitacoes[0].id);
     }
-  }, [filteredSolicitacoes, selectedId, search, page, solicitacoes.length]);
+  }, [solicitacoes, selectedId, search, page]);
 
   const updateDraft = (patch) => {
     setDraft((prev) => ({ ...prev, ...patch }));
@@ -83,6 +82,11 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
 
   const updateSearch = (value) => {
     setSearch(value);
+    setPage(0);
+  };
+
+  const updateSort = (value) => {
+    setSort(value);
     setPage(0);
   };
 
@@ -159,7 +163,7 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
         });
       }
 
-      let successMessage = wasEditing ? "Solicitacao reenviada." : "Solicitacao enviada.";
+      let successMessage = wasEditing ? "Solicitação reenviada." : "Solicitação enviada.";
       let noticeType = "success";
 
       if (!wasEditing && attachments.pendingAttachments.length > 0 && saved?.id) {
@@ -188,8 +192,7 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
         setSelectedId(saved.id);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao salvar solicitacao.";
-      showNotice("error", message);
+      showNotice("error", getErrorMessage(error, "Erro ao salvar solicitação."));
     } finally {
       setSubmitting(false);
     }
@@ -213,7 +216,7 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
 
   return {
     categories,
-    solicitacoes: filteredSolicitacoes,
+    solicitacoes,
     solicitacoesTotal: total,
     selectedId,
     selected,
@@ -227,7 +230,7 @@ export const useFilialController = ({ requestAuthed, showNotice, attachments, en
     page,
     totalPages,
     setSearch: updateSearch,
-    setSort,
+    setSort: updateSort,
     setPage,
     setSelectedId,
     updateDraft,

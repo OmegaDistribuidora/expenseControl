@@ -71,7 +71,7 @@ public class GoogleDriveConfig {
             String clientId = normalizeValue(oauthClientId, DEFAULT_OAUTH_CLIENT_ID);
             if (clientId == null || clientId.isBlank()
                     || oauthClientSecret == null || oauthClientSecret.isBlank()) {
-                throw new IllegalStateException("GOOGLE_OAUTH_CLIENT_ID/SECRET nao configurados.");
+                throw new IllegalStateException("GOOGLE_OAUTH_CLIENT_ID/SECRET não configurados.");
             }
 
             return UserCredentials.newBuilder()
@@ -84,7 +84,7 @@ public class GoogleDriveConfig {
         String credentialsJson = resolveCredentialsJson(rawJson, jsonFile);
         if (credentialsJson == null || credentialsJson.isBlank()) {
             throw new IllegalStateException(
-                    "Credenciais do Drive nao configuradas. Use GOOGLE_OAUTH_REFRESH_TOKEN " +
+                    "Credenciais do Drive não configuradas. Use GOOGLE_OAUTH_REFRESH_TOKEN " +
                     "ou GOOGLE_SERVICE_ACCOUNT_JSON/FILE."
             );
         }
@@ -111,7 +111,7 @@ public class GoogleDriveConfig {
         try {
             var path = Paths.get(trimmed);
             if (!Files.exists(path)) {
-                throw new IllegalStateException("Arquivo de credenciais nao encontrado: " + trimmed);
+                throw new IllegalStateException("Arquivo de credenciais não encontrado: " + trimmed);
             }
             return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
         } catch (IOException ex) {

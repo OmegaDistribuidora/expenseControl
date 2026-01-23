@@ -24,7 +24,7 @@ export const AdminCategoriesPanel = ({
             />
           </div>
           <div className="field">
-            <label>Descricao</label>
+          <label>Descrição</label>
             <input
               value={categoryForm.descricao}
               onChange={(event) => onUpdateCategoryForm({ descricao: event.target.value })}

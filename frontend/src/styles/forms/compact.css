@@ -1,0 +1,69 @@
+.panel--categories form {
+  display: grid;
+  gap: 10px;
+}
+
+.panel--categories .field {
+  margin-bottom: 10px;
+}
+
+.panel--categories .field-row {
+  gap: 12px;
+}
+
+.layout--admin.is-compact .field {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.layout--admin.is-compact .field label {
+  font-size: 0.95rem;
+}
+
+.layout--admin.is-compact .field-grid,
+.layout--admin.is-compact .field-row {
+  gap: 12px;
+}
+
+.form--compact .field {
+  margin-bottom: 10px;
+}
+
+.form--compact .field-grid,
+.form--compact .field-row {
+  gap: 12px;
+}
+
+.form--compact .field-grid {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.form--compact > .field-grid {
+  margin-bottom: 10px;
+}
+
+.form--compact .field-grid .field,
+.form--compact .field-row .field {
+  margin-bottom: 0;
+}
+
+.form--compact .section-title {
+  margin: 10px 0 6px;
+}
+
+.form--compact .file-field {
+  margin-bottom: 10px;
+}
+
+.form--compact .file-dropzone {
+  padding: 10px;
+}
+
+.form--compact .line-list {
+  gap: 8px;
+}
+
+.form--compact .line-card {
+  padding: 12px 14px;
+  gap: 10px;
+}

@@ -20,9 +20,9 @@ public class ContaUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String usuario) throws UsernameNotFoundException {
         Conta conta = contaRepository.findByUsuario(usuario)
-                .orElseThrow(() -> new UsernameNotFoundException("Conta nao encontrada."));
+                .orElseThrow(() -> new UsernameNotFoundException("Conta nÃ£o encontrada."));
 
-        String role = "ROLE_" + conta.getTipo().name(); // ROLE_ADMIN / ROLE_FILIAL
+        String role = "ROLE_" + conta.getTipo().name();
 
         return User.builder()
                 .username(conta.getUsuario())
@@ -32,5 +32,3 @@ public class ContaUserDetailsService implements UserDetailsService {
                 .build();
     }
 }
-
-

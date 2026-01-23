@@ -20,7 +20,7 @@ export const AdminTabs = ({
         onClick={onSolicitacoes}
       >
         <FileText className="tab__icon" aria-hidden="true" />
-        Solicitacoes
+        Solicitações
       </button>
       <button
         className={`btn tab ${isAprovadasTab ? "is-active" : ""}`}
@@ -44,7 +44,7 @@ export const AdminTabs = ({
         onClick={onEstatisticas}
       >
         <BarChart3 className="tab__icon" aria-hidden="true" />
-        Estatisticas
+        Estatísticas
       </button>
     </div>
   );

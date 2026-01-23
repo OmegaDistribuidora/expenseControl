@@ -7,23 +7,23 @@ export const validateCategoryForm = (form) => {
     return "Informe o nome da categoria.";
   }
   if (exceedsLimit(form.nome, LIMITS.categoriaNome)) {
-    return `Nome da categoria com no maximo ${LIMITS.categoriaNome} caracteres.`;
+    return `Nome da categoria com no máximo ${LIMITS.categoriaNome} caracteres.`;
   }
   if (!isBlank(form.descricao) && exceedsLimit(form.descricao, LIMITS.categoriaDescricao)) {
-    return `Descricao da categoria com no maximo ${LIMITS.categoriaDescricao} caracteres.`;
+    return `Descrição da categoria com no máximo ${LIMITS.categoriaDescricao} caracteres.`;
   }
   return null;
 };
 
 export const validateDecisionForm = (decisao, form) => {
   if (!isBlank(form.comentario) && exceedsLimit(form.comentario, LIMITS.decisaoComentario)) {
-    return `Comentario com no maximo ${LIMITS.decisaoComentario} caracteres.`;
+    return `Comentário com no máximo ${LIMITS.decisaoComentario} caracteres.`;
   }
   const valorRaw = trimText(form.valorAprovado);
   if (decisao === "APROVADO" && valorRaw) {
     const valor = parseMoneyInput(valorRaw);
     if (!valor || valor <= 0) {
-      return "Informe um valor aprovado valido.";
+      return "Informe um valor aprovado válido.";
     }
   }
   return null;
@@ -31,10 +31,10 @@ export const validateDecisionForm = (decisao, form) => {
 
 export const validatePedidoInfo = (comentario) => {
   if (isBlank(comentario)) {
-    return "Informe o comentario para o pedido.";
+    return "Informe o comentário para o pedido.";
   }
   if (exceedsLimit(comentario, LIMITS.pedidoInfoComentario)) {
-    return `Comentario com no maximo ${LIMITS.pedidoInfoComentario} caracteres.`;
+    return `Comentário com no máximo ${LIMITS.pedidoInfoComentario} caracteres.`;
   }
   return null;
 };

@@ -35,14 +35,14 @@ public class AuthController {
     private Conta getContaLogada() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getName() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario nao autenticado.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
 
         String usuario = auth.getName();
         return contaRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
-                        "Conta autenticada nao encontrada no banco."
+                        "Conta autenticada não encontrada no banco."
                 ));
     }
 }

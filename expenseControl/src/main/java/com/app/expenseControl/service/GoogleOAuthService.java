@@ -45,7 +45,7 @@ public class GoogleOAuthService {
     public GoogleTokenResponse exchangeCode(String code) {
         ensureTokenExchangeConfigured();
         if (code == null || code.isBlank()) {
-            throw new IllegalArgumentException("Codigo OAuth ausente.");
+            throw new IllegalArgumentException("Código OAuth ausente.");
         }
 
         try {
@@ -59,7 +59,7 @@ public class GoogleOAuthService {
                     redirectUri
             ).execute();
         } catch (IOException | GeneralSecurityException ex) {
-            throw new IllegalStateException("Falha ao trocar codigo OAuth por token.", ex);
+            throw new IllegalStateException("Falha ao trocar código OAuth por token.", ex);
         }
     }
 
@@ -73,19 +73,19 @@ public class GoogleOAuthService {
 
     private void ensureAuthorizeConfigured() {
         if (clientId.isBlank()) {
-            throw new IllegalStateException("GOOGLE_OAUTH_CLIENT_ID nao configurado.");
+            throw new IllegalStateException("GOOGLE_OAUTH_CLIENT_ID não configurado.");
         }
         if (redirectUri.isBlank()) {
-            throw new IllegalStateException("GOOGLE_OAUTH_REDIRECT_URI nao configurado.");
+            throw new IllegalStateException("GOOGLE_OAUTH_REDIRECT_URI não configurado.");
         }
     }
 
     private void ensureTokenExchangeConfigured() {
         if (clientId.isBlank() || clientSecret.isBlank()) {
-            throw new IllegalStateException("GOOGLE_OAUTH_CLIENT_ID/SECRET nao configurados.");
+            throw new IllegalStateException("GOOGLE_OAUTH_CLIENT_ID/SECRET não configurados.");
         }
         if (redirectUri.isBlank()) {
-            throw new IllegalStateException("GOOGLE_OAUTH_REDIRECT_URI nao configurado.");
+            throw new IllegalStateException("GOOGLE_OAUTH_REDIRECT_URI não configurado.");
         }
     }
 

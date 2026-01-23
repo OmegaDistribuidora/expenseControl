@@ -27,7 +27,7 @@ public class DebugAuthController {
     @GetMapping("/debug/admin-matches")
     public String matches() {
         var contaOpt = contaRepository.findByUsuario("admin");
-        if (contaOpt.isEmpty()) return "Admin nao existe no banco.";
+        if (contaOpt.isEmpty()) return "Admin não existe no banco.";
 
         var admin = contaOpt.get();
         boolean ok = passwordEncoder.matches("admin123", admin.getSenhaHash());

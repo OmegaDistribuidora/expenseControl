@@ -56,44 +56,44 @@ export const validateSolicitacaoDraft = (draft, reenvioComentario) => {
     return "Selecione uma categoria.";
   }
   if (isBlank(draft.titulo)) {
-    return "Informe o titulo.";
+    return "Informe o título.";
   }
   if (exceedsLimit(draft.titulo, LIMITS.titulo)) {
-    return `Titulo com no maximo ${LIMITS.titulo} caracteres.`;
+    return `Título com no máximo ${LIMITS.titulo} caracteres.`;
   }
   if (isBlank(draft.solicitanteNome)) {
     return "Informe o nome do solicitante.";
   }
   if (exceedsLimit(draft.solicitanteNome, LIMITS.solicitanteNome)) {
-    return `Nome do solicitante com no maximo ${LIMITS.solicitanteNome} caracteres.`;
+    return `Nome do solicitante com no máximo ${LIMITS.solicitanteNome} caracteres.`;
   }
   if (isBlank(draft.descricao)) {
-    return "Informe a descricao.";
+    return "Informe a descrição.";
   }
   if (exceedsLimit(draft.descricao, LIMITS.descricao)) {
-    return `Descricao com no maximo ${LIMITS.descricao} caracteres.`;
+    return `Descrição com no máximo ${LIMITS.descricao} caracteres.`;
   }
   if (isBlank(draft.ondeVaiSerUsado)) {
     return "Informe onde vai ser usado.";
   }
   if (exceedsLimit(draft.ondeVaiSerUsado, LIMITS.ondeVaiSerUsado)) {
-    return `Onde vai ser usado com no maximo ${LIMITS.ondeVaiSerUsado} caracteres.`;
+    return `Onde vai ser usado com no máximo ${LIMITS.ondeVaiSerUsado} caracteres.`;
   }
   const valorEstimado = parseMoneyInput(draft.valorEstimado);
   if (!valorEstimado || valorEstimado <= 0) {
-    return "Informe um valor estimado valido.";
+    return "Informe um valor estimado válido.";
   }
   if (!isBlank(draft.fornecedor) && exceedsLimit(draft.fornecedor, LIMITS.fornecedor)) {
-    return `Fornecedor com no maximo ${LIMITS.fornecedor} caracteres.`;
+    return `Fornecedor com no máximo ${LIMITS.fornecedor} caracteres.`;
   }
   if (!isBlank(draft.formaPagamento) && exceedsLimit(draft.formaPagamento, LIMITS.formaPagamento)) {
-    return `Forma de pagamento com no maximo ${LIMITS.formaPagamento} caracteres.`;
+    return `Forma de pagamento com no máximo ${LIMITS.formaPagamento} caracteres.`;
   }
   if (!isBlank(draft.observacoes) && exceedsLimit(draft.observacoes, LIMITS.observacoes)) {
-    return `Observacoes com no maximo ${LIMITS.observacoes} caracteres.`;
+    return `Observações com no máximo ${LIMITS.observacoes} caracteres.`;
   }
   if (!isBlank(reenvioComentario) && exceedsLimit(reenvioComentario, LIMITS.reenvioComentario)) {
-    return `Comentario do reenvio com no maximo ${LIMITS.reenvioComentario} caracteres.`;
+    return `Comentário do reenvio com no máximo ${LIMITS.reenvioComentario} caracteres.`;
   }
 
   for (let index = 0; index < draft.linhas.length; index += 1) {
@@ -107,17 +107,17 @@ export const validateSolicitacaoDraft = (draft, reenvioComentario) => {
       return `Informe o nome do ${itemLabel}.`;
     }
     if (exceedsLimit(descricao, LIMITS.linhaDescricao)) {
-      return `Nome do ${itemLabel} com no maximo ${LIMITS.linhaDescricao} caracteres.`;
+      return `Nome do ${itemLabel} com no máximo ${LIMITS.linhaDescricao} caracteres.`;
     }
     if (!valorRaw) {
       return `Informe o valor do ${itemLabel}.`;
     }
     const valor = parseMoneyInput(linha.valor);
     if (!valor || valor <= 0) {
-      return `Informe um valor valido para o ${itemLabel}.`;
+      return `Informe um valor válido para o ${itemLabel}.`;
     }
     if (observacao && exceedsLimit(observacao, LIMITS.linhaObservacao)) {
-      return `Observacao do ${itemLabel} com no maximo ${LIMITS.linhaObservacao} caracteres.`;
+      return `Observação do ${itemLabel} com no máximo ${LIMITS.linhaObservacao} caracteres.`;
     }
   }
 

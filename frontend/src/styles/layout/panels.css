@@ -1,0 +1,32 @@
+.panel--form {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  border-top: 3px solid rgba(var(--accent-rgb), 0.35);
+}
+
+.panel--categories {
+  gap: 10px;
+}
+
+.panel--list {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.panel--detail {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 700;
+}
+
+.panel__subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
