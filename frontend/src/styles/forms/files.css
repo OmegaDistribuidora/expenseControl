@@ -7,8 +7,9 @@
   gap: 8px;
   padding: 12px;
   border-radius: var(--radius-md);
-  border: 1px dashed rgba(43, 36, 26, 0.28);
-  background: var(--surface-soft);
+  border: 1px dashed rgba(var(--ink-rgb), 0.32);
+  background: var(--surface);
+  box-shadow: 0 1px 0 rgba(var(--ink-rgb), 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   cursor: pointer;
 }

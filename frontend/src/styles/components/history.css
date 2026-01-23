@@ -5,7 +5,7 @@
 
 .history-item {
   padding: 10px 12px;
-  border: 1px solid rgba(43, 36, 26, 0.18);
+  border: 1px solid rgba(var(--ink-rgb), 0.18);
   background: var(--surface-strong);
   border-left: 4px solid rgba(var(--accent-rgb), 0.4);
   border-radius: var(--radius-md);
@@ -45,7 +45,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid rgba(43, 36, 26, 0.18);
+  border: 1px solid rgba(var(--ink-rgb), 0.18);
   border-radius: var(--radius-md);
   background: var(--surface-strong);
   font-size: 0.95rem;

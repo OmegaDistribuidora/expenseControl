@@ -13,8 +13,8 @@
   width: min(480px, 100%);
   background: var(--surface);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(43, 36, 26, 0.18);
-  box-shadow: 0 22px 60px rgba(43, 36, 26, 0.2);
+  border: 1px solid rgba(var(--ink-rgb), 0.18);
+  box-shadow: 0 22px 60px rgba(var(--ink-rgb), 0.2);
   padding: 22px 24px;
   display: grid;
   gap: 12px;

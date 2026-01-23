@@ -1,7 +1,7 @@
 .list-empty {
   padding: 20px;
   border-radius: var(--radius-md);
-  border: 1px dashed rgba(43, 36, 26, 0.25);
+  border: 1px dashed rgba(var(--ink-rgb), 0.25);
   color: var(--muted);
   text-align: center;
   background: var(--surface-soft);
@@ -15,7 +15,7 @@
 .skeleton-card {
   padding: 14px 16px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(43, 36, 26, 0.12);
+  border: 1px solid rgba(var(--ink-rgb), 0.12);
   background: var(--surface-soft);
   display: grid;
   gap: 8px;
@@ -24,7 +24,7 @@
 .skeleton-line {
   height: 12px;
   border-radius: var(--radius-pill);
-  background: #e7dfd2;
+  background: #e2e8f0;
   position: relative;
   overflow: hidden;
 }
@@ -50,6 +50,6 @@
   padding: 12px;
   border-radius: var(--radius-md);
   background: var(--surface-soft);
-  border: 1px solid rgba(43, 36, 26, 0.12);
+  border: 1px solid rgba(var(--ink-rgb), 0.12);
   align-items: center;
 }

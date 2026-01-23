@@ -40,7 +40,7 @@
 
 .divider {
   height: 1px;
-  background: rgba(43, 36, 26, 0.14);
+  background: rgba(var(--ink-rgb), 0.14);
   margin: 12px 0;
 }
 

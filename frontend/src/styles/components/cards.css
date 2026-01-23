@@ -44,7 +44,7 @@
 .card-item {
   padding: 14px 16px 14px 13px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(43, 36, 26, 0.18);
+  border: 1px solid rgba(var(--ink-rgb), 0.18);
   border-left: 4px solid transparent;
   background: var(--surface-strong);
   display: grid;
@@ -62,7 +62,7 @@
 .card-item:hover {
   transform: translateY(-2px);
   border-color: rgba(var(--accent-rgb), 0.45);
-  box-shadow: 0 14px 28px rgba(43, 36, 26, 0.12);
+  box-shadow: 0 14px 28px rgba(var(--ink-rgb), 0.12);
 }
 
 .card-item--static {
@@ -72,7 +72,7 @@
 .card-item--static:hover {
   transform: none;
   box-shadow: none;
-  border-color: rgba(43, 36, 26, 0.18);
+  border-color: rgba(var(--ink-rgb), 0.18);
   border-left-color: transparent;
 }
 
@@ -80,7 +80,7 @@
   padding: 12px 14px;
   gap: 6px;
   background: var(--surface);
-  border-left-color: rgba(43, 36, 26, 0.18);
+  border-left-color: rgba(var(--ink-rgb), 0.18);
   border-left-width: 1px;
 }
 
@@ -108,7 +108,7 @@
 }
 
 .card-item--category.card-item--static:hover {
-  border-left-color: rgba(43, 36, 26, 0.18);
+  border-left-color: rgba(var(--ink-rgb), 0.18);
 }
 
 .card-item--category .card-top {

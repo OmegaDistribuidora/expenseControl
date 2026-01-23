@@ -6,7 +6,7 @@
 .line-card {
   padding: 14px 16px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(43, 36, 26, 0.18);
+  border: 1px solid rgba(var(--ink-rgb), 0.18);
   background: var(--surface-strong);
   display: grid;
   gap: 12px;

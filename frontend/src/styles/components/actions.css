@@ -31,15 +31,15 @@
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, #0b6e4f 0%, #13956c 100%);
-  border-color: #0b6e4f;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  border-color: var(--accent);
   color: #fffaf4;
-  box-shadow: 0 12px 24px rgba(11, 110, 79, 0.2);
+  box-shadow: 0 12px 24px rgba(var(--accent-rgb), 0.25);
 }
 
 .btn--primary:hover:not(:disabled) {
-  border-color: #0b6e4f;
-  box-shadow: 0 16px 30px rgba(11, 110, 79, 0.24);
+  border-color: var(--accent);
+  box-shadow: 0 16px 30px rgba(var(--accent-rgb), 0.32);
 }
 
 .btn--ghost {
@@ -67,10 +67,10 @@
 }
 
 .tab.is-active {
-  background: linear-gradient(135deg, #0b6e4f 0%, #13956c 100%);
-  border-color: #0b6e4f;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  border-color: var(--accent);
   color: #fffaf4;
-  box-shadow: 0 10px 24px rgba(11, 110, 79, 0.24);
+  box-shadow: 0 10px 24px rgba(var(--accent-rgb), 0.28);
 }
 
 .compact-toggle {
@@ -124,7 +124,7 @@
   gap: 12px;
   padding: 12px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(43, 36, 26, 0.18);
+  border: 1px solid var(--stroke);
   background: var(--surface-strong);
   width: 100%;
 }

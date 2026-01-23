@@ -33,8 +33,32 @@ const statusChartLabels = {
 };
 
 const STATUS_ORDER = ["PENDENTE", "APROVADO", "REPROVADO", "PENDENTE_INFO"];
-const STATUS_COLORS = ["#b36a1b", "#1d8a5b", "#c9463f", "#1b6aa6"];
-const PIE_COLORS = ["#0b6e4f", "#1b6aa6", "#b36a1b", "#c9463f", "#6b5b44", "#1d8a5b"];
+const STATUS_COLORS = [
+  "var(--chart-secondary)",
+  "var(--chart-tertiary)",
+  "var(--chart-quaternary)",
+  "var(--chart-primary)",
+];
+const FILIAL_COLORS = [
+  "var(--chart-primary)",
+  "var(--chart-secondary)",
+  "var(--chart-tertiary)",
+  "var(--chart-quaternary)",
+  "var(--chart-soft)",
+];
+const PIE_COLORS = [
+  "var(--chart-primary)",
+  "var(--chart-secondary)",
+  "var(--chart-tertiary)",
+  "var(--chart-quaternary)",
+  "var(--chart-muted)",
+  "var(--chart-soft)",
+];
+const CHART_HEIGHTS = {
+  pie: 260,
+  status: 240,
+  compact: 200,
+};
 
 const ChartTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
@@ -214,8 +238,11 @@ export const AdminStatsPanel = ({ stats, loading }) => {
                   <div className="list-empty">Sem dados para categorias.</div>
                 ) : (
                   <>
-                    <div className="chart-wrapper chart-wrapper--pie">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div
+                      className="chart-wrapper chart-wrapper--pie"
+                      style={{ minHeight: CHART_HEIGHTS.pie }}
+                    >
+                      <ResponsiveContainer width="100%" height={CHART_HEIGHTS.pie}>
                         <PieChart>
                           <Tooltip content={<ChartTooltip />} />
                           <Pie
@@ -260,8 +287,11 @@ export const AdminStatsPanel = ({ stats, loading }) => {
                   <h3 className="panel__title">Status das solicitações</h3>
                   <span className="small">Todas as solicitações</span>
                 </div>
-                <div className="chart-wrapper chart-wrapper--status">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div
+                  className="chart-wrapper chart-wrapper--status"
+                  style={{ minHeight: CHART_HEIGHTS.status }}
+                >
+                  <ResponsiveContainer width="100%" height={CHART_HEIGHTS.status}>
                     <BarChart data={statusData} margin={{ top: 6, right: 16, left: 4, bottom: 6 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="label" tick={{ fill: "var(--muted)", fontSize: 12 }} />
@@ -306,14 +336,21 @@ export const AdminStatsPanel = ({ stats, loading }) => {
                   <div className="list-empty">Sem dados para filiais.</div>
                 ) : (
                   <>
-                    <div className="chart-wrapper chart-wrapper--compact">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div
+                      className="chart-wrapper chart-wrapper--compact"
+                      style={{ minHeight: CHART_HEIGHTS.compact }}
+                    >
+                      <ResponsiveContainer width="100%" height={CHART_HEIGHTS.compact}>
                         <BarChart
                           data={topFiliais}
                           layout="vertical"
                           margin={{ top: 6, right: 12, left: 8, bottom: 6 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <CartesianGrid
+                            strokeDasharray="4 4"
+                            vertical={false}
+                            stroke="rgba(var(--ink-rgb), 0.28)"
+                          />
                           <XAxis
                             type="number"
                             tickFormatter={formatAxisCurrency}
@@ -327,14 +364,24 @@ export const AdminStatsPanel = ({ stats, loading }) => {
                             tick={{ fill: "var(--text)", fontSize: 11 }}
                           />
                           <Tooltip content={<ChartTooltip />} />
-                          <Bar dataKey="valorTotal" fill="var(--accent)" radius={[6, 6, 6, 6]} barSize={12} />
+                          <Bar dataKey="valorTotal" radius={[6, 6, 6, 6]} barSize={12}>
+                            {topFiliais.map((item, index) => (
+                              <Cell
+                                key={`filial-bar-${item.label}`}
+                                fill={FILIAL_COLORS[index % FILIAL_COLORS.length]}
+                              />
+                            ))}
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                     <div className="chart-legend">
-                      {topFiliais.map((item) => (
+                      {topFiliais.map((item, index) => (
                         <div key={`legend-filial-${item.label}`} className="legend-item">
-                          <span className="legend-dot" style={{ "--legend-color": "var(--accent)" }} />
+                          <span
+                            className="legend-dot"
+                            style={{ "--legend-color": FILIAL_COLORS[index % FILIAL_COLORS.length] }}
+                          />
                           <div className="legend-text">
                             <span className="legend-label">{item.label}</span>
                             <span className="legend-meta">

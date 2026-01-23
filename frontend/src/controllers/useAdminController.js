@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_PAGE_SIZE } from "./constants.js";
 import { normalizePageResponse } from "./utils/pagination.js";
 import { parseMoneyInput } from "./utils/money.js";
@@ -17,6 +17,8 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const statsRef = useRef(null);
+  const statsLoadingRef = useRef(false);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -53,14 +55,25 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     setPage(0);
   };
 
+  useEffect(() => {
+    statsRef.current = stats;
+  }, [stats]);
+
+  useEffect(() => {
+    statsLoadingRef.current = statsLoading;
+  }, [statsLoading]);
+
   const loadStats = useCallback(
     async (force = false) => {
       if (!enabled) return;
-      if (!force && stats) return;
-      if (statsLoading) return;
+      if (!force && statsRef.current) return;
+      if (statsLoadingRef.current) return;
       setStatsLoading(true);
       try {
-        const statsResponse = await requestAuthed("/admin/solicitacoes/estatisticas");
+        const endpoint = force
+          ? `/admin/solicitacoes/estatisticas?ts=${Date.now()}`
+          : "/admin/solicitacoes/estatisticas";
+        const statsResponse = await requestAuthed(endpoint);
         setStats(statsResponse);
       } catch (error) {
         showNotice("error", getErrorMessage(error, "Erro ao carregar estatísticas."));
@@ -68,7 +81,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
         setStatsLoading(false);
       }
     },
-    [enabled, requestAuthed, showNotice, stats, statsLoading],
+    [enabled, requestAuthed, showNotice],
   );
 
   const loadAdminData = useCallback(async () => {
@@ -260,6 +273,7 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
       showNotice("success", "Pedido de ajuste enviado.");
       setPedidoInfoForm({ comentario: "" });
       await loadAdminData();
+      await loadStats(true);
       return true;
     } catch (error) {
       showNotice("error", getErrorMessage(error, "Erro ao pedir ajuste."));

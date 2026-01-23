@@ -85,8 +85,16 @@ export const AdminView = ({
 
   useEffect(() => {
     if (isEstatisticasTab) {
-      onLoadStats?.();
+      onLoadStats?.(true);
     }
+  }, [isEstatisticasTab, onLoadStats]);
+
+  useEffect(() => {
+    if (!isEstatisticasTab) return undefined;
+    const refreshId = setInterval(() => {
+      onLoadStats?.(true);
+    }, 30000);
+    return () => clearInterval(refreshId);
   }, [isEstatisticasTab, onLoadStats]);
 
   return (

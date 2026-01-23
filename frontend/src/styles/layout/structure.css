@@ -37,6 +37,6 @@
   border-radius: var(--radius-pill);
   background: var(--surface);
   border: 1px solid var(--stroke);
-  box-shadow: 0 14px 28px rgba(43, 36, 26, 0.12);
+  box-shadow: 0 14px 28px rgba(var(--ink-rgb), 0.12);
   justify-self: start;
 }

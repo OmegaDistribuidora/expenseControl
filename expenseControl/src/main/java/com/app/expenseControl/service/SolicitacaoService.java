@@ -271,7 +271,12 @@ public class SolicitacaoService {
 
         var porCategoria = solicitacaoRepository.resumoPorCategoria(StatusSolicitacao.APROVADO);
         var porFilial = solicitacaoRepository.resumoPorFilial(StatusSolicitacao.APROVADO);
-        var porStatus = solicitacaoRepository.resumoPorStatus();
+        var porStatus = java.util.Arrays.stream(StatusSolicitacao.values())
+                .map(status -> new com.app.expenseControl.dto.SolicitacaoStatusResumoDTO(
+                        status,
+                        solicitacaoRepository.countByStatus(status)
+                ))
+                .toList();
 
         return new SolicitacaoStatsDTO(totalAprovadas, valorTotalAprovado, porCategoria, porFilial, porStatus);
     }
