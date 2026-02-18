@@ -30,6 +30,15 @@ export const useAppController = () => {
     [auth?.basic],
   );
 
+  const handleOwnPasswordChanged = useCallback((newPassword) => {
+    const usuario = auth?.usuario;
+    if (!usuario || !newPassword) return;
+    const basic = btoa(`${usuario}:${newPassword}`);
+    const nextAuth = { usuario, basic };
+    setAuth(nextAuth);
+    saveStoredAuth(nextAuth);
+  }, [auth?.usuario]);
+
   const updateLoginForm = useCallback((patch) => {
     setLoginForm((prev) => ({ ...prev, ...patch }));
   }, []);
@@ -71,6 +80,8 @@ export const useAppController = () => {
     showNotice,
     openConfirm,
     enabled: profileType === "ADMIN",
+    currentUsuario: profile?.usuario || auth?.usuario || "",
+    onOwnPasswordChanged: handleOwnPasswordChanged,
   });
 
   const resetFilial = filial.reset;

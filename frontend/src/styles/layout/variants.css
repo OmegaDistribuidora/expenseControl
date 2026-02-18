@@ -37,6 +37,16 @@
   display: none;
 }
 
+.layout--admin.is-users .panel--form {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.layout--admin.is-users .panel--list,
+.layout--admin.is-users .panel--detail {
+  display: none;
+}
+
 .layout--admin.is-stats .panel--stats {
   grid-column: 1 / -1;
   grid-row: 2;

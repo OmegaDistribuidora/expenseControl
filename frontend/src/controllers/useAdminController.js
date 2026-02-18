@@ -5,7 +5,14 @@ import { parseMoneyInput } from "./utils/money.js";
 import { getErrorMessage } from "./utils/errors.js";
 import { validateCategoryForm, validateDecisionForm, validatePedidoInfo } from "./utils/validation.js";
 
-export const useAdminController = ({ requestAuthed, showNotice, openConfirm, enabled }) => {
+export const useAdminController = ({
+  requestAuthed,
+  showNotice,
+  openConfirm,
+  enabled,
+  currentUsuario,
+  onOwnPasswordChanged,
+}) => {
   const [categories, setCategories] = useState([]);
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -24,6 +31,10 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("RECENT");
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ usuario: "", novaSenha: "", senhaAtual: "" });
   const [categoryForm, setCategoryForm] = useState({ nome: "", descricao: "" });
   const [decisionForm, setDecisionForm] = useState({ valorAprovado: "", comentario: "" });
   const [pedidoInfoForm, setPedidoInfoForm] = useState({ comentario: "" });
@@ -55,6 +66,10 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     setPage(0);
   };
 
+  const updatePasswordForm = (patch) => {
+    setPasswordForm((prev) => ({ ...prev, ...patch }));
+  };
+
   useEffect(() => {
     statsRef.current = stats;
   }, [stats]);
@@ -83,6 +98,27 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     },
     [enabled, requestAuthed, showNotice],
   );
+
+  const loadUsers = useCallback(async () => {
+    if (!enabled) return;
+    setUsersLoading(true);
+    try {
+      const response = await requestAuthed("/admin/contas");
+      const list = Array.isArray(response) ? response : [];
+      setUsers(list);
+      setPasswordForm((prev) => {
+        if (prev.usuario && list.some((item) => item.usuario === prev.usuario)) {
+          return prev;
+        }
+        const preferred = list.find((item) => item.usuario === currentUsuario)?.usuario || list[0]?.usuario || "";
+        return { ...prev, usuario: preferred };
+      });
+    } catch (error) {
+      showNotice("error", getErrorMessage(error, "Erro ao carregar usuarios."));
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [currentUsuario, enabled, requestAuthed, showNotice]);
 
   const loadAdminData = useCallback(async () => {
     setLoading(true);
@@ -114,6 +150,11 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     if (!enabled) return;
     void loadAdminData();
   }, [enabled, loadAdminData]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    void loadUsers();
+  }, [enabled, loadUsers]);
 
   useEffect(() => {
     const lastPage = totalPages > 0 ? totalPages - 1 : 0;
@@ -312,6 +353,56 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     });
   };
 
+  const handleChangePassword = async (event) => {
+    event.preventDefault();
+    if (passwordSaving) return;
+
+    const usuario = passwordForm.usuario.trim();
+    const novaSenha = passwordForm.novaSenha.trim();
+    const senhaAtual = passwordForm.senhaAtual.trim();
+
+    if (!usuario) {
+      showNotice("error", "Selecione o usuario.");
+      return;
+    }
+    if (novaSenha.length < 6) {
+      showNotice("error", "A nova senha deve ter no minimo 6 caracteres.");
+      return;
+    }
+
+    const isOwnUser = usuario === currentUsuario;
+    if (isOwnUser && !senhaAtual) {
+      showNotice("error", "Informe sua senha atual para alterar a propria senha.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      await requestAuthed(`/admin/contas/${encodeURIComponent(usuario)}/senha`, {
+        method: "PUT",
+        body: JSON.stringify({
+          novaSenha,
+          senhaAtual: isOwnUser ? senhaAtual : null,
+        }),
+      });
+
+      if (isOwnUser) {
+        onOwnPasswordChanged?.(novaSenha);
+      }
+
+      showNotice("success", `Senha alterada para ${usuario}.`);
+      setPasswordForm((prev) => ({
+        ...prev,
+        novaSenha: "",
+        senhaAtual: "",
+      }));
+    } catch (error) {
+      showNotice("error", getErrorMessage(error, "Erro ao alterar senha."));
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
   const reset = useCallback(() => {
     setCategories([]);
     setSolicitacoes([]);
@@ -329,6 +420,10 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     setTotalPages(0);
     setSearch("");
     setSort("RECENT");
+    setUsers([]);
+    setUsersLoading(false);
+    setPasswordSaving(false);
+    setPasswordForm({ usuario: "", novaSenha: "", senhaAtual: "" });
     setCategoryForm({ nome: "", descricao: "" });
     setDecisionForm({ valorAprovado: "", comentario: "" });
     setPedidoInfoForm({ comentario: "" });
@@ -353,6 +448,10 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     statsLoading,
     search,
     sort,
+    users,
+    usersLoading,
+    passwordForm,
+    passwordSaving,
     page,
     totalPages,
     setSelectedId,
@@ -368,6 +467,8 @@ export const useAdminController = ({ requestAuthed, showNotice, openConfirm, ena
     onDecision: handleDecision,
     onPedidoInfo: handlePedidoInfo,
     onDeleteSolicitacao: handleDeleteSolicitacao,
+    onUpdatePasswordForm: updatePasswordForm,
+    onSubmitPassword: handleChangePassword,
     onLoadStats: loadStats,
     reload: loadAdminData,
     reset,

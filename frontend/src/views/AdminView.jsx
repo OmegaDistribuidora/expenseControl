@@ -4,6 +4,7 @@ import { AdminDetailPanel } from "./admin/AdminDetailPanel.jsx";
 import { AdminSolicitacoesPanel } from "./admin/AdminSolicitacoesPanel.jsx";
 import { AdminStatsPanel } from "./admin/AdminStatsPanel.jsx";
 import { AdminTabs } from "./admin/AdminTabs.jsx";
+import { AdminUsersPanel } from "./admin/AdminUsersPanel.jsx";
 
 export const AdminView = ({
   categories,
@@ -28,6 +29,11 @@ export const AdminView = ({
   attachmentsLoading,
   search,
   sort,
+  users,
+  usersLoading,
+  passwordForm,
+  passwordSaving,
+  currentUsuario,
   onSelect,
   onPageChange,
   onStatusChange,
@@ -44,6 +50,8 @@ export const AdminView = ({
   onLoadStats,
   onDownloadAttachment,
   onDeleteAttachment,
+  onUpdatePasswordForm,
+  onSubmitPassword,
 }) => {
   const previousStatusRef = useRef(statusFilter);
   const [activeTab, setActiveTab] = useState(
@@ -53,12 +61,15 @@ export const AdminView = ({
   const isAprovadasTab = activeTab === "APROVADAS";
   const isCategoriasTab = activeTab === "CATEGORIAS";
   const isEstatisticasTab = activeTab === "ESTATISTICAS";
+  const isUsuariosTab = activeTab === "USUARIOS";
   const isRequestsTab = isSolicitacoesTab || isAprovadasTab;
   const layoutState = isEstatisticasTab
     ? "is-stats"
     : isRequestsTab
       ? "is-requests"
-      : "is-categories";
+      : isUsuariosTab
+        ? "is-users"
+        : "is-categories";
 
   const handleStatusChange = (nextStatus) => {
     previousStatusRef.current = nextStatus;
@@ -81,6 +92,10 @@ export const AdminView = ({
 
   const handleEstatisticasTab = () => {
     setActiveTab("ESTATISTICAS");
+  };
+
+  const handleUsuariosTab = () => {
+    setActiveTab("USUARIOS");
   };
 
   useEffect(() => {
@@ -107,6 +122,7 @@ export const AdminView = ({
         onAprovadas={handleAprovadasTab}
         onCategorias={handleCategoriasTab}
         onEstatisticas={handleEstatisticasTab}
+        onUsuarios={handleUsuariosTab}
       />
 
       {isCategoriasTab && (
@@ -142,6 +158,18 @@ export const AdminView = ({
       )}
 
       {isEstatisticasTab && <AdminStatsPanel stats={stats} loading={statsLoading} />}
+
+      {isUsuariosTab && (
+        <AdminUsersPanel
+          users={users}
+          usersLoading={usersLoading}
+          passwordForm={passwordForm}
+          passwordSaving={passwordSaving}
+          currentUsuario={currentUsuario}
+          onUpdatePasswordForm={onUpdatePasswordForm}
+          onSubmitPassword={onSubmitPassword}
+        />
+      )}
 
       {isRequestsTab && (
         <AdminDetailPanel

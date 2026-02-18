@@ -23,17 +23,18 @@ public class AdminSeed implements CommandLineRunner {
         String usuario = "admin";
         String senha = "admin123";
 
-        Conta admin = contaRepository.findByUsuario(usuario).orElseGet(Conta::new);
+        if (contaRepository.existsByUsuario(usuario)) {
+            return;
+        }
 
+        Conta admin = new Conta();
         admin.setNome("Administrador");
         admin.setUsuario(usuario);
         admin.setTipo(TipoConta.ADMIN);
         admin.setAtivo(true);
-
         admin.setSenhaHash(passwordEncoder.encode(senha));
 
         contaRepository.save(admin);
-
-        System.out.println("Admin garantido: " + usuario + " / " + senha);
+        System.out.println("Admin inicial criado: " + usuario + " / " + senha);
     }
 }

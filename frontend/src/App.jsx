@@ -99,6 +99,11 @@ function App() {
           attachmentsLoading={controller.admin.attachmentsLoading}
           search={controller.admin.search}
           sort={controller.admin.sort}
+          users={controller.admin.users}
+          usersLoading={controller.admin.usersLoading}
+          passwordForm={controller.admin.passwordForm}
+          passwordSaving={controller.admin.passwordSaving}
+          currentUsuario={controller.profile.usuario}
           onSelect={controller.admin.setSelectedId}
           onPageChange={controller.admin.setPage}
           onStatusChange={controller.admin.setStatusFilter}
@@ -115,6 +120,8 @@ function App() {
           onDownloadAttachment={controller.admin.onDownloadAttachment}
           onDeleteAttachment={controller.admin.onDeleteAttachment}
           onDeleteSolicitacao={controller.admin.onDeleteSolicitacao}
+          onUpdatePasswordForm={controller.admin.onUpdatePasswordForm}
+          onSubmitPassword={controller.admin.onSubmitPassword}
         />
       )}
       <ConfirmDialog
