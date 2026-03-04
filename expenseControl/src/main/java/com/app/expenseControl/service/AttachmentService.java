@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +27,7 @@ import java.util.Set;
 
 @Service
 public class AttachmentService {
+    private static final Logger log = LoggerFactory.getLogger(AttachmentService.class);
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
     private static final int MAX_ATTACHMENTS = 5;
@@ -141,7 +144,15 @@ public class AttachmentService {
     public void deleteAllForSolicitacao(Long solicitacaoId) {
         List<Attachment> attachments = attachmentRepository.findBySolicitacaoIdOrderByCreatedAtAsc(solicitacaoId);
         for (Attachment attachment : attachments) {
-            driveStorageService.deleteFile(attachment.getDriveFileId());
+            try {
+                driveStorageService.deleteFile(attachment.getDriveFileId());
+            } catch (Exception ex) {
+                // Mantem a exclusao dos dados mesmo quando o arquivo fisico nao existe mais.
+                log.warn("Falha ao remover arquivo fisico do anexo {} (solicitacao {}): {}",
+                        attachment.getId(),
+                        solicitacaoId,
+                        ex.getMessage());
+            }
         }
         attachmentRepository.deleteAll(attachments);
     }

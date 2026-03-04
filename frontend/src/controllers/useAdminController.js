@@ -131,7 +131,7 @@ export const useAdminController = ({
   );
 
   const checkNewPendingRequests = useCallback(async () => {
-    if (!enabled || !canApproveSolicitacao) return;
+    if (!enabled) return;
 
     try {
       const response = await requestAuthed(
@@ -161,7 +161,7 @@ export const useAdminController = ({
     } catch {
       // Ignora erro para nao interromper a tela por falha temporaria de polling.
     }
-  }, [canApproveSolicitacao, enabled, notifyNewRequests, requestAuthed]);
+  }, [enabled, notifyNewRequests, requestAuthed]);
 
   const loadStats = useCallback(
     async (force = false) => {
@@ -247,7 +247,7 @@ export const useAdminController = ({
   }, [enabled, loadUsers]);
 
   useEffect(() => {
-    if (!enabled || !canApproveSolicitacao) {
+    if (!enabled) {
       pendingMonitorInitializedRef.current = false;
       lastPendingMaxIdRef.current = 0;
       return;
@@ -257,10 +257,10 @@ export const useAdminController = ({
     if (notificationPromptedRef.current) return;
     notificationPromptedRef.current = true;
     void Notification.requestPermission().catch(() => {});
-  }, [canApproveSolicitacao, enabled]);
+  }, [enabled]);
 
   useEffect(() => {
-    if (!enabled || !canApproveSolicitacao) {
+    if (!enabled) {
       pendingMonitorInitializedRef.current = false;
       lastPendingMaxIdRef.current = 0;
       return undefined;
@@ -281,7 +281,7 @@ export const useAdminController = ({
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [canApproveSolicitacao, checkNewPendingRequests, enabled]);
+  }, [checkNewPendingRequests, enabled]);
 
   useEffect(() => {
     const lastPage = totalPages > 0 ? totalPages - 1 : 0;
