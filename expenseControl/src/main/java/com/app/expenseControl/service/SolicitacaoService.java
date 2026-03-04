@@ -8,6 +8,7 @@ import com.app.expenseControl.dto.SolicitacaoPedidoInfoDTO;
 import com.app.expenseControl.dto.SolicitacaoReenvioDTO;
 import com.app.expenseControl.dto.SolicitacaoResponseDTO;
 import com.app.expenseControl.dto.SolicitacaoStatsDTO;
+import com.app.expenseControl.entity.Attachment;
 import com.app.expenseControl.entity.Categoria;
 import com.app.expenseControl.entity.Conta;
 import com.app.expenseControl.entity.Solicitacao;
@@ -17,6 +18,7 @@ import com.app.expenseControl.enums.StatusSolicitacao;
 import com.app.expenseControl.enums.TipoConta;
 import com.app.expenseControl.repository.CategoriaRepository;
 import com.app.expenseControl.repository.ContaRepository;
+import com.app.expenseControl.repository.AttachmentRepository;
 import com.app.expenseControl.repository.SolicitacaoHistoricoRepository;
 import com.app.expenseControl.repository.SolicitacaoLinhaRepository;
 import com.app.expenseControl.repository.SolicitacaoRepository;
@@ -32,8 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -47,10 +52,12 @@ public class SolicitacaoService {
     private static final String ACAO_REPROVADA = "REPROVADA";
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 50;
+    private static final DateTimeFormatter AUDIT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private final SolicitacaoRepository solicitacaoRepository;
     private final CategoriaRepository categoriaRepository;
     private final ContaRepository contaRepository;
+    private final AttachmentRepository attachmentRepository;
     private final SolicitacaoLinhaRepository solicitacaoLinhaRepository;
     private final SolicitacaoHistoricoRepository solicitacaoHistoricoRepository;
     private final AttachmentService attachmentService;
@@ -60,6 +67,7 @@ public class SolicitacaoService {
     public SolicitacaoService(SolicitacaoRepository solicitacaoRepository,
                               CategoriaRepository categoriaRepository,
                               ContaRepository contaRepository,
+                              AttachmentRepository attachmentRepository,
                               SolicitacaoLinhaRepository solicitacaoLinhaRepository,
                               SolicitacaoHistoricoRepository solicitacaoHistoricoRepository,
                               AttachmentService attachmentService,
@@ -68,6 +76,7 @@ public class SolicitacaoService {
         this.solicitacaoRepository = solicitacaoRepository;
         this.categoriaRepository = categoriaRepository;
         this.contaRepository = contaRepository;
+        this.attachmentRepository = attachmentRepository;
         this.solicitacaoLinhaRepository = solicitacaoLinhaRepository;
         this.solicitacaoHistoricoRepository = solicitacaoHistoricoRepository;
         this.attachmentService = attachmentService;
@@ -103,13 +112,9 @@ public class SolicitacaoService {
 
         Solicitacao salva = solicitacaoRepository.save(s);
         List<SolicitacaoLinha> linhasSalvas = salvarLinhas(salva.getId(), dto.linhas());
+        List<Attachment> anexos = attachmentRepository.findBySolicitacaoIdOrderByCreatedAtAsc(salva.getId());
         registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_CRIADA, null);
-        auditoriaService.registrar(
-                "SOLICITACAO_CRIADA",
-                "Solicitacao #" + salva.getId() + " criada na filial " + salva.getFilial() + ".",
-                "SOLICITACAO",
-                String.valueOf(salva.getId())
-        );
+        registrarAuditoriaSolicitacao("SOLICITACAO_CRIADA", salva, linhasSalvas, anexos);
 
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
@@ -157,14 +162,10 @@ public class SolicitacaoService {
 
         solicitacaoLinhaRepository.deleteBySolicitacaoId(salva.getId());
         List<SolicitacaoLinha> linhasSalvas = salvarLinhas(salva.getId(), dto.dados().linhas());
+        List<Attachment> anexos = attachmentRepository.findBySolicitacaoIdOrderByCreatedAtAsc(salva.getId());
 
         registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_REENVIADA, dto.comentario());
-        auditoriaService.registrar(
-                "SOLICITACAO_REENVIADA",
-                "Solicitacao #" + salva.getId() + " reenviada na filial " + salva.getFilial() + ".",
-                "SOLICITACAO",
-                String.valueOf(salva.getId())
-        );
+        registrarAuditoriaSolicitacao("SOLICITACAO_REENVIADA", salva, linhasSalvas, anexos);
 
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
@@ -313,15 +314,10 @@ public class SolicitacaoService {
         s.setValorAprovado(null);
 
         Solicitacao salva = solicitacaoRepository.save(s);
-        registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_PEDIDO_INFO, dto.comentario());
-        auditoriaService.registrar(
-                "SOLICITACAO_PEDIDO_AJUSTE",
-                "Pedido de ajuste na solicitacao #" + salva.getId() + ".",
-                "SOLICITACAO",
-                String.valueOf(salva.getId())
-        );
-
         List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(salva.getId());
+        List<Attachment> anexos = attachmentRepository.findBySolicitacaoIdOrderByCreatedAtAsc(salva.getId());
+        registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_PEDIDO_INFO, dto.comentario());
+        registrarAuditoriaSolicitacao("SOLICITACAO_PEDIDO_AJUSTE", salva, linhas, anexos);
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
 
@@ -359,17 +355,17 @@ public class SolicitacaoService {
         s.setDecididoEm(LocalDateTime.now());
 
         Solicitacao salva = solicitacaoRepository.save(s);
+        List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(salva.getId());
+        List<Attachment> anexos = attachmentRepository.findBySolicitacaoIdOrderByCreatedAtAsc(salva.getId());
 
         String acao = decisao.equals("APROVADO") ? ACAO_APROVADA : ACAO_REPROVADA;
         registrarHistorico(salva.getId(), conta.getTipo().name(), acao, dto.comentario());
-        auditoriaService.registrar(
+        registrarAuditoriaSolicitacao(
                 decisao.equals("APROVADO") ? "SOLICITACAO_APROVADA" : "SOLICITACAO_REPROVADA",
-                "Decisao " + decisao + " registrada na solicitacao #" + salva.getId() + ".",
-                "SOLICITACAO",
-                String.valueOf(salva.getId())
+                salva,
+                linhas,
+                anexos
         );
-
-        List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(salva.getId());
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
 
@@ -385,17 +381,14 @@ public class SolicitacaoService {
         Solicitacao s = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada."));
         ensureAdminCanViewSolicitacao(conta, s);
+        List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(s.getId());
+        List<Attachment> anexos = attachmentRepository.findBySolicitacaoIdOrderByCreatedAtAsc(s.getId());
 
         solicitacaoHistoricoRepository.deleteBySolicitacaoId(s.getId());
         solicitacaoLinhaRepository.deleteBySolicitacaoId(s.getId());
         attachmentService.deleteAllForSolicitacao(s.getId());
         solicitacaoRepository.delete(s);
-        auditoriaService.registrar(
-                "SOLICITACAO_EXCLUIDA",
-                "Solicitacao #" + s.getId() + " excluida da filial " + s.getFilial() + ".",
-                "SOLICITACAO",
-                String.valueOf(s.getId())
-        );
+        registrarAuditoriaSolicitacao("SOLICITACAO_EXCLUIDA", s, linhas, anexos);
     }
 
     private Page<Solicitacao> buscarPaginaAdmin(Conta conta,
@@ -633,6 +626,106 @@ public class SolicitacaoService {
                 .build();
 
         solicitacaoHistoricoRepository.save(historico);
+    }
+
+    private void registrarAuditoriaSolicitacao(String acao,
+                                               Solicitacao solicitacao,
+                                               List<SolicitacaoLinha> linhas,
+                                               List<Attachment> anexos) {
+        String resumo = buildSolicitacaoResumo(solicitacao);
+        String detalheCompleto = buildSolicitacaoDetalheCompleto(acao, solicitacao, linhas, anexos);
+        auditoriaService.registrar(
+                acao,
+                resumo,
+                detalheCompleto,
+                "SOLICITACAO",
+                String.valueOf(solicitacao.getId())
+        );
+    }
+
+    private String buildSolicitacaoResumo(Solicitacao s) {
+        return "Solicitacao #" + s.getId()
+                + " | Valor estimado: " + formatCurrency(s.getValorEstimado())
+                + " | Categoria: " + safe(s.getCategoria() == null ? null : s.getCategoria().getNome())
+                + " | Filial: " + safe(s.getFilial())
+                + " | Titulo: " + safe(s.getTitulo());
+    }
+
+    private String buildSolicitacaoDetalheCompleto(String acao,
+                                                   Solicitacao s,
+                                                   List<SolicitacaoLinha> linhas,
+                                                   List<Attachment> anexos) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Acao: ").append(acao).append('\n');
+        sb.append("ID da solicitacao: ").append(s.getId()).append('\n');
+        sb.append("Empresa/Filial: ").append(safe(s.getFilial())).append('\n');
+        sb.append("Categoria: ").append(safe(s.getCategoria() == null ? null : s.getCategoria().getNome())).append('\n');
+        sb.append("Titulo: ").append(safe(s.getTitulo())).append('\n');
+        sb.append("Descricao: ").append(safe(s.getDescricao())).append('\n');
+        sb.append("Onde vai ser usado: ").append(safe(s.getOndeVaiSerUsado())).append('\n');
+        sb.append("Valor estimado: ").append(formatCurrency(s.getValorEstimado())).append('\n');
+        sb.append("Valor aprovado: ").append(formatCurrency(s.getValorAprovado())).append('\n');
+        sb.append("Solicitante: ").append(safe(s.getSolicitanteNome())).append('\n');
+        sb.append("Fornecedor/Empresa: ").append(safe(s.getFornecedor())).append('\n');
+        sb.append("Forma de pagamento: ").append(safe(s.getFormaPagamento())).append('\n');
+        sb.append("Observacoes: ").append(safe(s.getObservacoes())).append('\n');
+        sb.append("Status: ").append(s.getStatus() == null ? "-" : s.getStatus().name()).append('\n');
+        sb.append("Enviado em: ").append(formatDateTime(s.getEnviadoEm())).append('\n');
+        sb.append("Decidido em: ").append(formatDateTime(s.getDecididoEm())).append('\n');
+        sb.append("Comentario decisao: ").append(safe(s.getComentarioDecisao())).append('\n');
+
+        sb.append("Itens:\n");
+        if (linhas == null || linhas.isEmpty()) {
+            sb.append("  - Nenhum item.\n");
+        } else {
+            for (SolicitacaoLinha linha : linhas) {
+                sb.append("  - Descricao: ").append(safe(linha.getDescricao()))
+                        .append(" | Valor: ").append(formatCurrency(linha.getValor()))
+                        .append(" | Observacao: ").append(safe(linha.getObservacao()))
+                        .append('\n');
+            }
+        }
+
+        sb.append("Anexos:\n");
+        if (anexos == null || anexos.isEmpty()) {
+            sb.append("  - Nenhum anexo.\n");
+        } else {
+            for (Attachment anexo : anexos) {
+                sb.append("  - Arquivo: ").append(safe(anexo.getOriginalName()))
+                        .append(" | Tamanho: ").append(formatBytes(anexo.getSize()))
+                        .append(" | Tipo: ").append(safe(anexo.getContentType()))
+                        .append(" | Enviado por: ").append(safe(anexo.getUploadedBy()))
+                        .append(" | Data: ").append(formatDateTime(anexo.getCreatedAt()))
+                        .append('\n');
+            }
+        }
+
+        return sb.toString().trim();
+    }
+
+    private String safe(String value) {
+        if (value == null || value.isBlank()) return "-";
+        return value.trim();
+    }
+
+    private String formatCurrency(BigDecimal value) {
+        if (value == null) return "-";
+        return NumberFormat.getCurrencyInstance(new Locale("pt", "BR")).format(value);
+    }
+
+    private String formatDateTime(LocalDateTime value) {
+        if (value == null) return "-";
+        return value.format(AUDIT_DATE_FORMAT);
+    }
+
+    private String formatBytes(Long size) {
+        if (size == null) return "-";
+        double bytes = size.doubleValue();
+        if (bytes < 1024) return String.format(Locale.ROOT, "%.0f B", bytes);
+        double kb = bytes / 1024.0;
+        if (kb < 1024) return String.format(Locale.ROOT, "%.1f KB", kb);
+        double mb = kb / 1024.0;
+        return String.format(Locale.ROOT, "%.1f MB", mb);
     }
 
     private List<SolicitacaoResponseDTO> mapComLinhasEHistorico(List<Solicitacao> solicitacoes) {

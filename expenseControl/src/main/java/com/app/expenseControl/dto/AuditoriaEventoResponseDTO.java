@@ -10,6 +10,6 @@ public record AuditoriaEventoResponseDTO(
         String referenciaTipo,
         String referenciaId,
         String detalhe,
+        String detalheCompleto,
         LocalDateTime criadoEm
 ) {}
-

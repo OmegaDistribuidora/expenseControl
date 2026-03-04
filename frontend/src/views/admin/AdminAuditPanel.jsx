@@ -1,3 +1,5 @@
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { formatDateTime } from "../format";
 
 export const AdminAuditPanel = ({
@@ -11,6 +13,7 @@ export const AdminAuditPanel = ({
   onPageChange,
   onRefresh,
 }) => {
+  const [expanded, setExpanded] = useState(() => new Set());
   const hasPrevious = page > 0;
   const hasNext = page + 1 < totalPages;
 
@@ -18,6 +21,18 @@ export const AdminAuditPanel = ({
     event.preventDefault();
     onPageChange(0);
     onRefresh?.();
+  };
+
+  const toggleExpanded = (id) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   return (
@@ -49,19 +64,32 @@ export const AdminAuditPanel = ({
         <ul className="audit-list">
           {events.map((item) => (
             <li key={item.id} className="audit-item">
-              <p className="audit-line">
-                <span className="mono">{formatDateTime(item.criadoEm)}</span>
-                {" - "}
-                <strong>{item.usuario}</strong>
-                {" ("}
-                {item.tipoConta}
-                {") - "}
-                {item.acao}
-                {item.referenciaTipo && item.referenciaId
-                  ? ` [${item.referenciaTipo} ${item.referenciaId}]`
-                  : ""}
-              </p>
+              <div className="audit-item__header">
+                <p className="audit-line">
+                  <span className="mono">{formatDateTime(item.criadoEm)}</span>
+                  {" - "}
+                  <strong>{item.usuario}</strong>
+                  {" ("}
+                  {item.tipoConta}
+                  {") - "}
+                  {item.acao}
+                  {item.referenciaTipo && item.referenciaId
+                    ? ` [${item.referenciaTipo} ${item.referenciaId}]`
+                    : ""}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm audit-toggle"
+                  onClick={() => toggleExpanded(item.id)}
+                  aria-label={expanded.has(item.id) ? "Ocultar detalhes" : "Mostrar detalhes"}
+                >
+                  {expanded.has(item.id) ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               <p className="audit-detail">{item.detalhe}</p>
+              {expanded.has(item.id) && (
+                <pre className="audit-detail-full">{item.detalheCompleto || item.detalhe}</pre>
+              )}
             </li>
           ))}
         </ul>

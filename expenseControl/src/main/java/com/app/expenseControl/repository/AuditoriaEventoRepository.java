@@ -16,9 +16,9 @@ public interface AuditoriaEventoRepository extends JpaRepository<AuditoriaEvento
                or lower(coalesce(a.tipoConta, '')) like :term
                or lower(coalesce(a.acao, '')) like :term
                or lower(coalesce(a.detalhe, '')) like :term
+               or lower(coalesce(a.detalheCompleto, '')) like :term
                or lower(coalesce(a.referenciaTipo, '')) like :term
                or lower(coalesce(a.referenciaId, '')) like :term
             """)
     Page<AuditoriaEvento> search(@Param("term") String term, Pageable pageable);
 }
-

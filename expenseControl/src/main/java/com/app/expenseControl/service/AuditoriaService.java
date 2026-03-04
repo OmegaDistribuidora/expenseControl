@@ -35,11 +35,20 @@ public class AuditoriaService {
 
     @Transactional
     public void registrar(String acao, String detalhe) {
-        registrar(acao, detalhe, null, null);
+        registrar(acao, detalhe, detalhe, null, null);
     }
 
     @Transactional
     public void registrar(String acao, String detalhe, String referenciaTipo, String referenciaId) {
+        registrar(acao, detalhe, detalhe, referenciaTipo, referenciaId);
+    }
+
+    @Transactional
+    public void registrar(String acao,
+                          String resumo,
+                          String detalheCompleto,
+                          String referenciaTipo,
+                          String referenciaId) {
         try {
             String actor = usuarioAutenticado();
             String tipoConta = tipoContaAutenticada(actor);
@@ -49,7 +58,8 @@ public class AuditoriaService {
                     .acao(limit(normalizeAction(acao), 80))
                     .referenciaTipo(limit(blankToNull(referenciaTipo), 60))
                     .referenciaId(limit(blankToNull(referenciaId), 120))
-                    .detalhe(limit(normalizeDetail(detalhe), 2000))
+                    .detalhe(limit(normalizeDetail(resumo), 2000))
+                    .detalheCompleto(limit(normalizeFullDetail(detalheCompleto), 20000))
                     .build();
             auditoriaEventoRepository.save(evento);
         } catch (Exception ex) {
@@ -81,6 +91,7 @@ public class AuditoriaService {
                 row.getReferenciaTipo(),
                 row.getReferenciaId(),
                 row.getDetalhe(),
+                row.getDetalheCompleto(),
                 row.getCriadoEm()
         );
     }
@@ -117,6 +128,13 @@ public class AuditoriaService {
         return value.trim();
     }
 
+    private String normalizeFullDetail(String value) {
+        if (value == null || value.isBlank()) {
+            return "Sem detalhes completos.";
+        }
+        return value.trim();
+    }
+
     private String normalizeSearchTerm(String query) {
         if (query == null || query.isBlank()) {
             return null;
@@ -147,4 +165,3 @@ public class AuditoriaService {
         return value.substring(0, max);
     }
 }
-

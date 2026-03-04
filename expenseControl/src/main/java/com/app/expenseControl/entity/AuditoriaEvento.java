@@ -36,6 +36,9 @@ public class AuditoriaEvento {
     @Column(name = "detalhe", nullable = false, length = 2000)
     private String detalhe;
 
+    @Column(name = "detalhe_completo", columnDefinition = "TEXT")
+    private String detalheCompleto;
+
     @Column(name = "criado_em", nullable = false)
     private LocalDateTime criadoEm;
 
@@ -46,4 +49,3 @@ public class AuditoriaEvento {
         }
     }
 }
-
