@@ -5,6 +5,9 @@ import { parseMoneyInput } from "./utils/money.js";
 import { getErrorMessage } from "./utils/errors.js";
 import { validateCategoryForm, validateDecisionForm, validatePedidoInfo } from "./utils/validation.js";
 
+const NEW_REQUEST_NOTIFICATION_INTERVAL_MS = 20000;
+const NEW_REQUEST_CHECK_SIZE = 20;
+
 export const useAdminController = ({
   requestAuthed,
   showNotice,
@@ -49,6 +52,9 @@ export const useAdminController = ({
   const [categoryForm, setCategoryForm] = useState({ nome: "", descricao: "" });
   const [decisionForm, setDecisionForm] = useState({ valorAprovado: "", comentario: "" });
   const [pedidoInfoForm, setPedidoInfoForm] = useState({ comentario: "" });
+  const pendingMonitorInitializedRef = useRef(false);
+  const lastPendingMaxIdRef = useRef(0);
+  const notificationPromptedRef = useRef(false);
 
   const updateCategoryForm = (patch) => {
     setCategoryForm((prev) => ({ ...prev, ...patch }));
@@ -92,6 +98,70 @@ export const useAdminController = ({
   useEffect(() => {
     statsLoadingRef.current = statsLoading;
   }, [statsLoading]);
+
+  const notifyNewRequests = useCallback(
+    (newCount) => {
+      const total = Number.isFinite(newCount) && newCount > 1 ? newCount : 1;
+      const message =
+        total === 1
+          ? "Nova solicitacao pendente no sistema."
+          : `${total} novas solicitacoes pendentes no sistema.`;
+
+      if (typeof window === "undefined" || !("Notification" in window)) {
+        showNotice("success", message);
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+        const notification = new Notification("Expense Control", {
+          body: message,
+          tag: "pending-solicitacao",
+          renotify: true,
+        });
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+        return;
+      }
+
+      showNotice("success", message);
+    },
+    [showNotice],
+  );
+
+  const checkNewPendingRequests = useCallback(async () => {
+    if (!enabled || !canApproveSolicitacao) return;
+
+    try {
+      const response = await requestAuthed(
+        `/admin/solicitacoes?status=PENDENTE&sort=RECENT&page=0&size=${NEW_REQUEST_CHECK_SIZE}`,
+      );
+      const pageData = normalizePageResponse(response);
+      const ids = pageData.items
+        .map((item) => Number(item.id))
+        .filter((id) => Number.isFinite(id) && id > 0);
+      const currentMaxId = ids.length > 0 ? Math.max(...ids) : 0;
+
+      if (!pendingMonitorInitializedRef.current) {
+        pendingMonitorInitializedRef.current = true;
+        lastPendingMaxIdRef.current = currentMaxId;
+        return;
+      }
+
+      const previousMaxId = lastPendingMaxIdRef.current;
+      if (currentMaxId > previousMaxId) {
+        const newCount = ids.filter((id) => id > previousMaxId).length;
+        notifyNewRequests(newCount);
+      }
+
+      if (currentMaxId > lastPendingMaxIdRef.current) {
+        lastPendingMaxIdRef.current = currentMaxId;
+      }
+    } catch {
+      // Ignora erro para nao interromper a tela por falha temporaria de polling.
+    }
+  }, [canApproveSolicitacao, enabled, notifyNewRequests, requestAuthed]);
 
   const loadStats = useCallback(
     async (force = false) => {
@@ -175,6 +245,43 @@ export const useAdminController = ({
     if (!enabled) return;
     void loadUsers();
   }, [enabled, loadUsers]);
+
+  useEffect(() => {
+    if (!enabled || !canApproveSolicitacao) {
+      pendingMonitorInitializedRef.current = false;
+      lastPendingMaxIdRef.current = 0;
+      return;
+    }
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "default") return;
+    if (notificationPromptedRef.current) return;
+    notificationPromptedRef.current = true;
+    void Notification.requestPermission().catch(() => {});
+  }, [canApproveSolicitacao, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !canApproveSolicitacao) {
+      pendingMonitorInitializedRef.current = false;
+      lastPendingMaxIdRef.current = 0;
+      return undefined;
+    }
+
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      await checkNewPendingRequests();
+    };
+
+    void tick();
+    const intervalId = window.setInterval(() => {
+      void tick();
+    }, NEW_REQUEST_NOTIFICATION_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [canApproveSolicitacao, checkNewPendingRequests, enabled]);
 
   useEffect(() => {
     const lastPage = totalPages > 0 ? totalPages - 1 : 0;
@@ -522,6 +629,9 @@ export const useAdminController = ({
     setCategoryForm({ nome: "", descricao: "" });
     setDecisionForm({ valorAprovado: "", comentario: "" });
     setPedidoInfoForm({ comentario: "" });
+    pendingMonitorInitializedRef.current = false;
+    lastPendingMaxIdRef.current = 0;
+    notificationPromptedRef.current = false;
   }, []);
 
   return {

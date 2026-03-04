@@ -3,6 +3,8 @@ import { API_BASE } from "../models/api.js";
 import { ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE } from "./constants.js";
 import { getErrorMessage } from "./utils/errors.js";
 
+const PREVIEWABLE_EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg"]);
+
 export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice, openConfirm }) => {
   const [attachments, setAttachments] = useState([]);
   const [attachmentsLoading, setAttachmentsLoading] = useState(false);
@@ -205,7 +207,7 @@ export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice,
         return;
       }
       try {
-        const response = await fetch(`${API_BASE}/anexos/${attachment.id}/download`, {
+        const response = await fetch(`${API_BASE}/anexos/${attachment.id}/download?disposition=inline`, {
           headers: {
             Authorization: `Basic ${authBasic}`,
           },
@@ -223,14 +225,38 @@ export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice,
         }
 
         const blob = await response.blob();
+        const contentType = (attachment.contentType || blob.type || "").toLowerCase();
+        const filename = String(attachment.originalName || "").toLowerCase();
+        const extension = filename.includes(".") ? filename.split(".").pop() : "";
+        const isPreviewable =
+          contentType.startsWith("image/") ||
+          contentType === "application/pdf" ||
+          PREVIEWABLE_EXTENSIONS.has(extension || "");
+
         const url = window.URL.createObjectURL(blob);
+
+        if (isPreviewable) {
+          const opened = window.open(url, "_blank", "noopener,noreferrer");
+          if (!opened) {
+            const link = document.createElement("a");
+            link.href = url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.click();
+          }
+          window.setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+          }, 60000);
+          return;
+        }
+
         const link = document.createElement("a");
         link.href = url;
         link.download = attachment.originalName || "arquivo";
         link.click();
         window.URL.revokeObjectURL(url);
       } catch (error) {
-        showNotice("error", getErrorMessage(error, "Erro ao baixar anexo."));
+        showNotice("error", getErrorMessage(error, "Erro ao visualizar anexo."));
       }
     },
     [authBasic, showNotice],

@@ -325,7 +325,7 @@ export const AdminDetailPanel = ({
                                 type="button"
                                 onClick={() => onDownloadAttachment(item)}
                               >
-                                Baixar
+                                Visualizar
                               </button>
                               {canDeleteAttachment && (
                                 <button

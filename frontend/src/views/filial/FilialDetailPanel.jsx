@@ -192,7 +192,7 @@ export const FilialDetailPanel = ({
                               type="button"
                               onClick={() => onDownloadAttachment(item)}
                             >
-                              Baixar
+                              Visualizar
                             </button>
                             {canEditAttachments && (
                               <button
