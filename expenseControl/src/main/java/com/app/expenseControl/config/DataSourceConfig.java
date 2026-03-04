@@ -1,12 +1,12 @@
 package com.app.expenseControl.config;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -16,7 +16,8 @@ import java.nio.charset.StandardCharsets;
 public class DataSourceConfig {
 
     @Bean
-    public DataSource dataSource(
+    @ConfigurationProperties("spring.datasource.hikari")
+    public HikariDataSource dataSource(
             @Value("${spring.datasource.url}") String localJdbcUrl,
             @Value("${spring.datasource.username:}") String localUsername,
             @Value("${spring.datasource.password:}") String localPassword,
