@@ -3,6 +3,7 @@ package com.app.expenseControl.controller;
 import com.app.expenseControl.entity.Conta;
 import com.app.expenseControl.enums.TipoConta;
 import com.app.expenseControl.repository.ContaRepository;
+import com.app.expenseControl.service.AuditoriaService;
 import com.app.expenseControl.service.ContaPermissionService;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -28,13 +29,16 @@ public class AdminContaController {
     private final ContaRepository contaRepository;
     private final PasswordEncoder passwordEncoder;
     private final ContaPermissionService permissionService;
+    private final AuditoriaService auditoriaService;
 
     public AdminContaController(ContaRepository contaRepository,
                                 PasswordEncoder passwordEncoder,
-                                ContaPermissionService permissionService) {
+                                ContaPermissionService permissionService,
+                                AuditoriaService auditoriaService) {
         this.contaRepository = contaRepository;
         this.passwordEncoder = passwordEncoder;
         this.permissionService = permissionService;
+        this.auditoriaService = auditoriaService;
     }
 
     @GetMapping
@@ -97,6 +101,12 @@ public class AdminContaController {
                 .build();
 
         Conta salva = contaRepository.save(conta);
+        auditoriaService.registrar(
+                "USUARIO_CRIADO",
+                "Usuario " + salva.getUsuario() + " criado com visibilidade em " + filiais.size() + " filial(is).",
+                "USUARIO",
+                salva.getUsuario()
+        );
         return toResumo(salva);
     }
 
@@ -135,6 +145,15 @@ public class AdminContaController {
 
         contaAlvo.setSenhaHash(passwordEncoder.encode(senha));
         contaRepository.save(contaAlvo);
+        String detalhe = alterandoPropriaSenha
+                ? "Usuario " + contaAlvo.getUsuario() + " alterou a propria senha."
+                : "Senha do usuario " + contaAlvo.getUsuario() + " alterada por " + contaLogada.getUsuario() + ".";
+        auditoriaService.registrar(
+                "SENHA_ALTERADA",
+                detalhe,
+                "USUARIO",
+                contaAlvo.getUsuario()
+        );
 
         return new AlterarSenhaResponse(contaAlvo.getUsuario(), "Senha alterada com sucesso.");
     }

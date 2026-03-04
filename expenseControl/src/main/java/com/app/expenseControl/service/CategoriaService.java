@@ -14,9 +14,12 @@ import java.util.List;
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
+    private final AuditoriaService auditoriaService;
 
-    public CategoriaService(CategoriaRepository categoriaRepository) {
+    public CategoriaService(CategoriaRepository categoriaRepository,
+                            AuditoriaService auditoriaService) {
         this.categoriaRepository = categoriaRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     public CategoriaResponseDTO criar(CategoriaCreateDTO dto) {
@@ -32,6 +35,12 @@ public class CategoriaService {
                 .build();
 
         Categoria salva = categoriaRepository.save(cat);
+        auditoriaService.registrar(
+                "CATEGORIA_CRIADA",
+                "Categoria \"" + salva.getNome() + "\" criada.",
+                "CATEGORIA",
+                String.valueOf(salva.getId())
+        );
 
         return new CategoriaResponseDTO(salva.getId(), salva.getNome(), salva.getDescricao(), salva.getAtiva());
     }
@@ -49,6 +58,12 @@ public class CategoriaService {
         if (Boolean.TRUE.equals(categoria.getAtiva())) {
             categoria.setAtiva(false);
             categoria = categoriaRepository.save(categoria);
+            auditoriaService.registrar(
+                    "CATEGORIA_INATIVADA",
+                    "Categoria \"" + categoria.getNome() + "\" inativada.",
+                    "CATEGORIA",
+                    String.valueOf(categoria.getId())
+            );
         }
 
         return new CategoriaResponseDTO(

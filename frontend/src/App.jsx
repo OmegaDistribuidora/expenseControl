@@ -102,6 +102,12 @@ function App() {
           users={controller.admin.users}
           filiaisDisponiveis={controller.admin.filiaisDisponiveis}
           usersLoading={controller.admin.usersLoading}
+          auditEvents={controller.admin.auditEvents}
+          auditLoading={controller.admin.auditLoading}
+          auditPage={controller.admin.auditPage}
+          auditTotalPages={controller.admin.auditTotalPages}
+          auditTotal={controller.admin.auditTotal}
+          auditSearch={controller.admin.auditSearch}
           passwordForm={controller.admin.passwordForm}
           passwordSaving={controller.admin.passwordSaving}
           createUserForm={controller.admin.createUserForm}
@@ -129,6 +135,9 @@ function App() {
           onSubmitPassword={controller.admin.onSubmitPassword}
           onUpdateCreateUserForm={controller.admin.onUpdateCreateUserForm}
           onCreateUser={controller.admin.onCreateUser}
+          onAuditPageChange={controller.admin.onAuditPageChange}
+          onAuditSearchChange={controller.admin.onAuditSearchChange}
+          onLoadAudit={controller.admin.onLoadAudit}
         />
       )}
       <ConfirmDialog

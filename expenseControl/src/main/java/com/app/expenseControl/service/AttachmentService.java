@@ -43,17 +43,20 @@ public class AttachmentService {
     private final ContaRepository contaRepository;
     private final GoogleDriveStorageService driveStorageService;
     private final ContaPermissionService permissionService;
+    private final AuditoriaService auditoriaService;
 
     public AttachmentService(AttachmentRepository attachmentRepository,
                              SolicitacaoRepository solicitacaoRepository,
                              ContaRepository contaRepository,
                              @Lazy GoogleDriveStorageService driveStorageService,
-                             ContaPermissionService permissionService) {
+                             ContaPermissionService permissionService,
+                             AuditoriaService auditoriaService) {
         this.attachmentRepository = attachmentRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.contaRepository = contaRepository;
         this.driveStorageService = driveStorageService;
         this.permissionService = permissionService;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional
@@ -98,6 +101,12 @@ public class AttachmentService {
                 .build();
 
         Attachment saved = attachmentRepository.save(attachment);
+        auditoriaService.registrar(
+                "ANEXO_ENVIADO",
+                "Anexo \"" + saved.getOriginalName() + "\" enviado para solicitacao #" + solicitacaoId + ".",
+                "SOLICITACAO",
+                String.valueOf(solicitacaoId)
+        );
         return toDTO(saved);
     }
 
@@ -138,6 +147,12 @@ public class AttachmentService {
 
         driveStorageService.deleteFile(attachment.getDriveFileId());
         attachmentRepository.delete(attachment);
+        auditoriaService.registrar(
+                "ANEXO_EXCLUIDO",
+                "Anexo \"" + attachment.getOriginalName() + "\" removido da solicitacao #" + solicitacao.getId() + ".",
+                "SOLICITACAO",
+                String.valueOf(solicitacao.getId())
+        );
     }
 
     @Transactional

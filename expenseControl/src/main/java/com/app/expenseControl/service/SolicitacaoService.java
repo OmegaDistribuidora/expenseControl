@@ -55,6 +55,7 @@ public class SolicitacaoService {
     private final SolicitacaoHistoricoRepository solicitacaoHistoricoRepository;
     private final AttachmentService attachmentService;
     private final ContaPermissionService permissionService;
+    private final AuditoriaService auditoriaService;
 
     public SolicitacaoService(SolicitacaoRepository solicitacaoRepository,
                               CategoriaRepository categoriaRepository,
@@ -62,7 +63,8 @@ public class SolicitacaoService {
                               SolicitacaoLinhaRepository solicitacaoLinhaRepository,
                               SolicitacaoHistoricoRepository solicitacaoHistoricoRepository,
                               AttachmentService attachmentService,
-                              ContaPermissionService permissionService) {
+                              ContaPermissionService permissionService,
+                              AuditoriaService auditoriaService) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.categoriaRepository = categoriaRepository;
         this.contaRepository = contaRepository;
@@ -70,6 +72,7 @@ public class SolicitacaoService {
         this.solicitacaoHistoricoRepository = solicitacaoHistoricoRepository;
         this.attachmentService = attachmentService;
         this.permissionService = permissionService;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional
@@ -101,6 +104,12 @@ public class SolicitacaoService {
         Solicitacao salva = solicitacaoRepository.save(s);
         List<SolicitacaoLinha> linhasSalvas = salvarLinhas(salva.getId(), dto.linhas());
         registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_CRIADA, null);
+        auditoriaService.registrar(
+                "SOLICITACAO_CRIADA",
+                "Solicitacao #" + salva.getId() + " criada na filial " + salva.getFilial() + ".",
+                "SOLICITACAO",
+                String.valueOf(salva.getId())
+        );
 
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
@@ -150,6 +159,12 @@ public class SolicitacaoService {
         List<SolicitacaoLinha> linhasSalvas = salvarLinhas(salva.getId(), dto.dados().linhas());
 
         registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_REENVIADA, dto.comentario());
+        auditoriaService.registrar(
+                "SOLICITACAO_REENVIADA",
+                "Solicitacao #" + salva.getId() + " reenviada na filial " + salva.getFilial() + ".",
+                "SOLICITACAO",
+                String.valueOf(salva.getId())
+        );
 
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
                 .findBySolicitacaoIdOrderByCriadoEmAsc(salva.getId());
@@ -299,6 +314,12 @@ public class SolicitacaoService {
 
         Solicitacao salva = solicitacaoRepository.save(s);
         registrarHistorico(salva.getId(), conta.getTipo().name(), ACAO_PEDIDO_INFO, dto.comentario());
+        auditoriaService.registrar(
+                "SOLICITACAO_PEDIDO_AJUSTE",
+                "Pedido de ajuste na solicitacao #" + salva.getId() + ".",
+                "SOLICITACAO",
+                String.valueOf(salva.getId())
+        );
 
         List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(salva.getId());
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
@@ -341,6 +362,12 @@ public class SolicitacaoService {
 
         String acao = decisao.equals("APROVADO") ? ACAO_APROVADA : ACAO_REPROVADA;
         registrarHistorico(salva.getId(), conta.getTipo().name(), acao, dto.comentario());
+        auditoriaService.registrar(
+                decisao.equals("APROVADO") ? "SOLICITACAO_APROVADA" : "SOLICITACAO_REPROVADA",
+                "Decisao " + decisao + " registrada na solicitacao #" + salva.getId() + ".",
+                "SOLICITACAO",
+                String.valueOf(salva.getId())
+        );
 
         List<SolicitacaoLinha> linhas = solicitacaoLinhaRepository.findBySolicitacaoId(salva.getId());
         List<SolicitacaoHistorico> historico = solicitacaoHistoricoRepository
@@ -363,6 +390,12 @@ public class SolicitacaoService {
         solicitacaoLinhaRepository.deleteBySolicitacaoId(s.getId());
         attachmentService.deleteAllForSolicitacao(s.getId());
         solicitacaoRepository.delete(s);
+        auditoriaService.registrar(
+                "SOLICITACAO_EXCLUIDA",
+                "Solicitacao #" + s.getId() + " excluida da filial " + s.getFilial() + ".",
+                "SOLICITACAO",
+                String.valueOf(s.getId())
+        );
     }
 
     private Page<Solicitacao> buscarPaginaAdmin(Conta conta,

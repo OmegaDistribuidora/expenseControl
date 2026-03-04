@@ -47,6 +47,18 @@
   display: none;
 }
 
+.layout--admin.is-audit .panel--audit {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.layout--admin.is-audit .panel--list,
+.layout--admin.is-audit .panel--detail,
+.layout--admin.is-audit .panel--form,
+.layout--admin.is-audit .panel--stats {
+  display: none;
+}
+
 .layout--admin.is-stats .panel--stats {
   grid-column: 1 / -1;
   grid-row: 2;

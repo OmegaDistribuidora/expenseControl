@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AdminCategoriesPanel } from "./admin/AdminCategoriesPanel.jsx";
+import { AdminAuditPanel } from "./admin/AdminAuditPanel.jsx";
 import { AdminDetailPanel } from "./admin/AdminDetailPanel.jsx";
 import { AdminSolicitacoesPanel } from "./admin/AdminSolicitacoesPanel.jsx";
 import { AdminStatsPanel } from "./admin/AdminStatsPanel.jsx";
@@ -32,6 +33,12 @@ export const AdminView = ({
   users,
   filiaisDisponiveis,
   usersLoading,
+  auditEvents,
+  auditLoading,
+  auditPage,
+  auditTotalPages,
+  auditTotal,
+  auditSearch,
   passwordForm,
   passwordSaving,
   createUserForm,
@@ -59,6 +66,9 @@ export const AdminView = ({
   onSubmitPassword,
   onUpdateCreateUserForm,
   onCreateUser,
+  onAuditPageChange,
+  onAuditSearchChange,
+  onLoadAudit,
 }) => {
   const previousStatusRef = useRef(statusFilter);
   const [activeTab, setActiveTab] = useState(
@@ -69,6 +79,7 @@ export const AdminView = ({
   const isCategoriasTab = activeTab === "CATEGORIAS";
   const isEstatisticasTab = activeTab === "ESTATISTICAS";
   const isUsuariosTab = activeTab === "USUARIOS";
+  const isAuditoriaTab = activeTab === "AUDITORIA";
   const isRequestsTab = isSolicitacoesTab || isAprovadasTab;
   const layoutState = isEstatisticasTab
     ? "is-stats"
@@ -76,6 +87,8 @@ export const AdminView = ({
       ? "is-requests"
       : isUsuariosTab
         ? "is-users"
+        : isAuditoriaTab
+          ? "is-audit"
         : "is-categories";
 
   const handleStatusChange = (nextStatus) => {
@@ -105,6 +118,10 @@ export const AdminView = ({
     setActiveTab("USUARIOS");
   };
 
+  const handleAuditoriaTab = () => {
+    setActiveTab("AUDITORIA");
+  };
+
   useEffect(() => {
     if (isEstatisticasTab) {
       onLoadStats?.(true);
@@ -119,6 +136,15 @@ export const AdminView = ({
     return () => clearInterval(refreshId);
   }, [isEstatisticasTab, onLoadStats]);
 
+  useEffect(() => {
+    if (!isAuditoriaTab) return undefined;
+    onLoadAudit?.(true);
+    const refreshId = setInterval(() => {
+      onLoadAudit?.(true);
+    }, 30000);
+    return () => clearInterval(refreshId);
+  }, [isAuditoriaTab, onLoadAudit]);
+
   return (
     <main
       className={`layout layout--admin ${layoutState} is-compact`}
@@ -130,6 +156,7 @@ export const AdminView = ({
         onCategorias={handleCategoriasTab}
         onEstatisticas={handleEstatisticasTab}
         onUsuarios={handleUsuariosTab}
+        onAuditoria={handleAuditoriaTab}
       />
 
       {isCategoriasTab && (
@@ -181,6 +208,20 @@ export const AdminView = ({
           onSubmitPassword={onSubmitPassword}
           onUpdateCreateUserForm={onUpdateCreateUserForm}
           onCreateUser={onCreateUser}
+        />
+      )}
+
+      {isAuditoriaTab && (
+        <AdminAuditPanel
+          events={auditEvents}
+          loading={auditLoading}
+          page={auditPage}
+          totalPages={auditTotalPages}
+          total={auditTotal}
+          search={auditSearch}
+          onSearchChange={onAuditSearchChange}
+          onPageChange={onAuditPageChange}
+          onRefresh={onLoadAudit}
         />
       )}
 

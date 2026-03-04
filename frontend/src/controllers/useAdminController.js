@@ -39,6 +39,14 @@ export const useAdminController = ({
   const [users, setUsers] = useState([]);
   const [filiaisDisponiveis, setFiliaisDisponiveis] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [auditEvents, setAuditEvents] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditPage, setAuditPage] = useState(0);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditTotalPages, setAuditTotalPages] = useState(0);
+  const [auditSearch, setAuditSearch] = useState("");
+  const auditPageRef = useRef(0);
+  const auditSearchRef = useRef("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [createUserSaving, setCreateUserSaving] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ usuario: "", novaSenha: "", senhaAtual: "" });
@@ -91,6 +99,13 @@ export const useAdminController = ({
     setCreateUserForm((prev) => ({ ...prev, ...patch }));
   };
 
+  const updateAuditSearch = (value) => {
+    auditSearchRef.current = value;
+    auditPageRef.current = 0;
+    setAuditSearch(value);
+    setAuditPage(0);
+  };
+
   useEffect(() => {
     statsRef.current = stats;
   }, [stats]);
@@ -98,6 +113,14 @@ export const useAdminController = ({
   useEffect(() => {
     statsLoadingRef.current = statsLoading;
   }, [statsLoading]);
+
+  useEffect(() => {
+    auditPageRef.current = auditPage;
+  }, [auditPage]);
+
+  useEffect(() => {
+    auditSearchRef.current = auditSearch;
+  }, [auditSearch]);
 
   const notifyNewRequests = useCallback(
     (newCount) => {
@@ -210,6 +233,39 @@ export const useAdminController = ({
     }
   }, [currentUsuario, enabled, requestAuthed, showNotice]);
 
+  const fetchAudit = useCallback(
+    async (targetPage, targetSearch) => {
+      if (!enabled) return;
+
+      setAuditLoading(true);
+      try {
+        const searchParam = targetSearch && targetSearch.trim()
+          ? `q=${encodeURIComponent(targetSearch.trim())}`
+          : "";
+        const queryString = [searchParam, `page=${targetPage}`, `size=${DEFAULT_PAGE_SIZE}`]
+          .filter(Boolean)
+          .join("&");
+        const response = await requestAuthed(`/admin/auditoria?${queryString}`);
+        const pageData = normalizePageResponse(response);
+        setAuditEvents(pageData.items);
+        setAuditTotal(pageData.totalElements);
+        setAuditTotalPages(pageData.totalPages);
+      } catch (error) {
+        showNotice("error", getErrorMessage(error, "Erro ao carregar auditoria."));
+      } finally {
+        setAuditLoading(false);
+      }
+    },
+    [enabled, requestAuthed, showNotice],
+  );
+
+  const loadAudit = useCallback(
+    async () => {
+      await fetchAudit(auditPageRef.current, auditSearchRef.current);
+    },
+    [fetchAudit],
+  );
+
   const loadAdminData = useCallback(async () => {
     setLoading(true);
     try {
@@ -245,6 +301,11 @@ export const useAdminController = ({
     if (!enabled) return;
     void loadUsers();
   }, [enabled, loadUsers]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    void fetchAudit(auditPage, auditSearch);
+  }, [auditPage, enabled, fetchAudit]);
 
   useEffect(() => {
     if (!enabled) {
@@ -289,6 +350,13 @@ export const useAdminController = ({
       setPage(lastPage);
     }
   }, [page, totalPages]);
+
+  useEffect(() => {
+    const lastAuditPage = auditTotalPages > 0 ? auditTotalPages - 1 : 0;
+    if (auditPage > lastAuditPage) {
+      setAuditPage(lastAuditPage);
+    }
+  }, [auditPage, auditTotalPages]);
 
   useEffect(() => {
     if (solicitacoes.length === 0) {
@@ -616,6 +684,12 @@ export const useAdminController = ({
     setUsers([]);
     setFiliaisDisponiveis([]);
     setUsersLoading(false);
+    setAuditEvents([]);
+    setAuditLoading(false);
+    setAuditPage(0);
+    setAuditTotal(0);
+    setAuditTotalPages(0);
+    setAuditSearch("");
     setPasswordSaving(false);
     setCreateUserSaving(false);
     setPasswordForm({ usuario: "", novaSenha: "", senhaAtual: "" });
@@ -656,6 +730,12 @@ export const useAdminController = ({
     users,
     filiaisDisponiveis,
     usersLoading,
+    auditEvents,
+    auditLoading,
+    auditPage,
+    auditTotal,
+    auditTotalPages,
+    auditSearch,
     passwordForm,
     passwordSaving,
     createUserForm,
@@ -679,6 +759,9 @@ export const useAdminController = ({
     onSubmitPassword: handleChangePassword,
     onUpdateCreateUserForm: updateCreateUserForm,
     onCreateUser: handleCreateUser,
+    onAuditPageChange: setAuditPage,
+    onAuditSearchChange: updateAuditSearch,
+    onLoadAudit: loadAudit,
     onLoadStats: loadStats,
     reload: loadAdminData,
     reset,

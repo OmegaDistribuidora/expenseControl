@@ -1,4 +1,4 @@
-import { BadgeCheck, BarChart3, FileText, Tags, Users } from "lucide-react";
+import { BadgeCheck, BarChart3, ClipboardList, FileText, Tags, Users } from "lucide-react";
 
 export const AdminTabs = ({
   activeTab,
@@ -7,12 +7,14 @@ export const AdminTabs = ({
   onCategorias,
   onEstatisticas,
   onUsuarios,
+  onAuditoria,
 }) => {
   const isSolicitacoesTab = activeTab === "SOLICITACOES";
   const isAprovadasTab = activeTab === "APROVADAS";
   const isCategoriasTab = activeTab === "CATEGORIAS";
   const isEstatisticasTab = activeTab === "ESTATISTICAS";
   const isUsuariosTab = activeTab === "USUARIOS";
+  const isAuditoriaTab = activeTab === "AUDITORIA";
 
   return (
     <div className="layout__tabs">
@@ -55,6 +57,14 @@ export const AdminTabs = ({
       >
         <Users className="tab__icon" aria-hidden="true" />
         Usuarios
+      </button>
+      <button
+        className={`btn tab ${isAuditoriaTab ? "is-active" : ""}`}
+        type="button"
+        onClick={onAuditoria}
+      >
+        <ClipboardList className="tab__icon" aria-hidden="true" />
+        Auditoria
       </button>
     </div>
   );
