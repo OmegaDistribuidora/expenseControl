@@ -11,6 +11,8 @@ export const useAdminController = ({
   openConfirm,
   enabled,
   currentUsuario,
+  canApproveSolicitacao,
+  isRootAdmin,
   onOwnPasswordChanged,
 }) => {
   const [categories, setCategories] = useState([]);
@@ -32,9 +34,18 @@ export const useAdminController = ({
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("RECENT");
   const [users, setUsers] = useState([]);
+  const [filiaisDisponiveis, setFiliaisDisponiveis] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [createUserSaving, setCreateUserSaving] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ usuario: "", novaSenha: "", senhaAtual: "" });
+  const [createUserForm, setCreateUserForm] = useState({
+    usuario: "",
+    nome: "",
+    senha: "",
+    podeAprovarSolicitacao: false,
+    filiaisVisiveis: [],
+  });
   const [categoryForm, setCategoryForm] = useState({ nome: "", descricao: "" });
   const [decisionForm, setDecisionForm] = useState({ valorAprovado: "", comentario: "" });
   const [pedidoInfoForm, setPedidoInfoForm] = useState({ comentario: "" });
@@ -70,6 +81,10 @@ export const useAdminController = ({
     setPasswordForm((prev) => ({ ...prev, ...patch }));
   };
 
+  const updateCreateUserForm = (patch) => {
+    setCreateUserForm((prev) => ({ ...prev, ...patch }));
+  };
+
   useEffect(() => {
     statsRef.current = stats;
   }, [stats]);
@@ -91,7 +106,7 @@ export const useAdminController = ({
         const statsResponse = await requestAuthed(endpoint);
         setStats(statsResponse);
       } catch (error) {
-        showNotice("error", getErrorMessage(error, "Erro ao carregar estatísticas."));
+        showNotice("error", getErrorMessage(error, "Erro ao carregar estatisticas."));
       } finally {
         setStatsLoading(false);
       }
@@ -103,9 +118,14 @@ export const useAdminController = ({
     if (!enabled) return;
     setUsersLoading(true);
     try {
-      const response = await requestAuthed("/admin/contas");
-      const list = Array.isArray(response) ? response : [];
+      const [usersResponse, filiaisResponse] = await Promise.all([
+        requestAuthed("/admin/contas"),
+        requestAuthed("/admin/contas/filiais"),
+      ]);
+      const list = Array.isArray(usersResponse) ? usersResponse : [];
+      const filiais = Array.isArray(filiaisResponse) ? filiaisResponse : [];
       setUsers(list);
+      setFiliaisDisponiveis(filiais);
       setPasswordForm((prev) => {
         if (prev.usuario && list.some((item) => item.usuario === prev.usuario)) {
           return prev;
@@ -217,7 +237,7 @@ export const useAdminController = ({
     if (!categoria?.id) return;
     openConfirm({
       title: "Inativar categoria",
-      message: `Deseja inativar a categoria \"${categoria.nome}\"?`,
+      message: `Deseja inativar a categoria "${categoria.nome}"?`,
       confirmLabel: "Inativar",
       intent: "danger",
       onConfirm: async () => {
@@ -239,8 +259,12 @@ export const useAdminController = ({
   };
 
   const handleDecision = async (decisao) => {
+    if (!canApproveSolicitacao) {
+      showNotice("error", "Seu usuario nao tem permissao para aprovar ou solicitar ajuste.");
+      return;
+    }
     if (!selected || selected.status !== "PENDENTE") {
-      showNotice("error", "Selecione uma solicitação pendente.");
+      showNotice("error", "Selecione uma solicitacao pendente.");
       return;
     }
     if (decisionLoading) return;
@@ -266,12 +290,12 @@ export const useAdminController = ({
           method: "PATCH",
           body: JSON.stringify(payload),
         });
-        showNotice("success", "Decisão registrada.");
+        showNotice("success", "Decisao registrada.");
         setDecisionForm({ valorAprovado: "", comentario: "" });
         await loadAdminData();
         await loadStats(true);
       } catch (error) {
-        showNotice("error", getErrorMessage(error, "Erro ao decidir solicitação."));
+        showNotice("error", getErrorMessage(error, "Erro ao decidir solicitacao."));
       } finally {
         setDecisionLoading(false);
       }
@@ -279,8 +303,8 @@ export const useAdminController = ({
 
     if (decisao === "REPROVADO") {
       openConfirm({
-        title: "Reprovar solicitação",
-        message: "Tem certeza que deseja reprovar esta solicitação?",
+        title: "Reprovar solicitacao",
+        message: "Tem certeza que deseja reprovar esta solicitacao?",
         confirmLabel: "Reprovar",
         intent: "danger",
         onConfirm: applyDecision,
@@ -292,8 +316,12 @@ export const useAdminController = ({
   };
 
   const handlePedidoInfo = async () => {
+    if (!canApproveSolicitacao) {
+      showNotice("error", "Seu usuario nao tem permissao para aprovar ou solicitar ajuste.");
+      return false;
+    }
     if (!selected || selected.status !== "PENDENTE") {
-      showNotice("error", "Selecione uma solicitação pendente.");
+      showNotice("error", "Selecione uma solicitacao pendente.");
       return false;
     }
     if (pedidoInfoLoading) return false;
@@ -326,12 +354,12 @@ export const useAdminController = ({
 
   const handleDeleteSolicitacao = async () => {
     if (!selected) {
-      showNotice("error", "Selecione uma solicitação.");
+      showNotice("error", "Selecione uma solicitacao.");
       return;
     }
     openConfirm({
-      title: "Excluir solicitação",
-      message: "Tem certeza que deseja excluir esta solicitação? Essa ação não pode ser desfeita.",
+      title: "Excluir solicitacao",
+      message: "Tem certeza que deseja excluir esta solicitacao? Essa acao nao pode ser desfeita.",
       confirmLabel: "Excluir",
       intent: "danger",
       onConfirm: async () => {
@@ -341,11 +369,11 @@ export const useAdminController = ({
           await requestAuthed(`/admin/solicitacoes/${selected.id}`, {
             method: "DELETE",
           });
-          showNotice("success", "Solicitação excluída.");
+          showNotice("success", "Solicitacao excluida.");
           await loadAdminData();
           await loadStats(true);
         } catch (error) {
-          showNotice("error", getErrorMessage(error, "Erro ao excluir solicitação."));
+          showNotice("error", getErrorMessage(error, "Erro ao excluir solicitacao."));
         } finally {
           setDeleteLoading(false);
         }
@@ -403,6 +431,64 @@ export const useAdminController = ({
     }
   };
 
+  const handleCreateUser = async (event) => {
+    event.preventDefault();
+    if (!isRootAdmin) {
+      showNotice("error", "Apenas o usuario admin pode criar novas contas.");
+      return;
+    }
+    if (createUserSaving) return;
+
+    const usuario = createUserForm.usuario.trim().toLowerCase();
+    const nome = createUserForm.nome.trim();
+    const senha = createUserForm.senha.trim();
+    const filiais = Array.isArray(createUserForm.filiaisVisiveis) ? createUserForm.filiaisVisiveis : [];
+
+    if (!usuario) {
+      showNotice("error", "Informe o usuario.");
+      return;
+    }
+    if (!nome) {
+      showNotice("error", "Informe o nome.");
+      return;
+    }
+    if (senha.length < 6) {
+      showNotice("error", "A senha deve ter no minimo 6 caracteres.");
+      return;
+    }
+    if (filiais.length === 0) {
+      showNotice("error", "Selecione ao menos uma filial visivel.");
+      return;
+    }
+
+    setCreateUserSaving(true);
+    try {
+      await requestAuthed("/admin/contas", {
+        method: "POST",
+        body: JSON.stringify({
+          usuario,
+          nome,
+          senha,
+          podeAprovarSolicitacao: Boolean(createUserForm.podeAprovarSolicitacao),
+          filiaisVisiveis: filiais,
+        }),
+      });
+      showNotice("success", `Usuario ${usuario} criado com sucesso.`);
+      setCreateUserForm({
+        usuario: "",
+        nome: "",
+        senha: "",
+        podeAprovarSolicitacao: false,
+        filiaisVisiveis: [],
+      });
+      await loadUsers();
+    } catch (error) {
+      showNotice("error", getErrorMessage(error, "Erro ao criar usuario."));
+    } finally {
+      setCreateUserSaving(false);
+    }
+  };
+
   const reset = useCallback(() => {
     setCategories([]);
     setSolicitacoes([]);
@@ -421,9 +507,18 @@ export const useAdminController = ({
     setSearch("");
     setSort("RECENT");
     setUsers([]);
+    setFiliaisDisponiveis([]);
     setUsersLoading(false);
     setPasswordSaving(false);
+    setCreateUserSaving(false);
     setPasswordForm({ usuario: "", novaSenha: "", senhaAtual: "" });
+    setCreateUserForm({
+      usuario: "",
+      nome: "",
+      senha: "",
+      podeAprovarSolicitacao: false,
+      filiaisVisiveis: [],
+    });
     setCategoryForm({ nome: "", descricao: "" });
     setDecisionForm({ valorAprovado: "", comentario: "" });
     setPedidoInfoForm({ comentario: "" });
@@ -449,9 +544,12 @@ export const useAdminController = ({
     search,
     sort,
     users,
+    filiaisDisponiveis,
     usersLoading,
     passwordForm,
     passwordSaving,
+    createUserForm,
+    createUserSaving,
     page,
     totalPages,
     setSelectedId,
@@ -469,6 +567,8 @@ export const useAdminController = ({
     onDeleteSolicitacao: handleDeleteSolicitacao,
     onUpdatePasswordForm: updatePasswordForm,
     onSubmitPassword: handleChangePassword,
+    onUpdateCreateUserForm: updateCreateUserForm,
+    onCreateUser: handleCreateUser,
     onLoadStats: loadStats,
     reload: loadAdminData,
     reset,

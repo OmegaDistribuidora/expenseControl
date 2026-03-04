@@ -30,10 +30,15 @@ export const AdminView = ({
   search,
   sort,
   users,
+  filiaisDisponiveis,
   usersLoading,
   passwordForm,
   passwordSaving,
+  createUserForm,
+  createUserSaving,
   currentUsuario,
+  canApproveSolicitacao,
+  isRootAdmin,
   onSelect,
   onPageChange,
   onStatusChange,
@@ -52,6 +57,8 @@ export const AdminView = ({
   onDeleteAttachment,
   onUpdatePasswordForm,
   onSubmitPassword,
+  onUpdateCreateUserForm,
+  onCreateUser,
 }) => {
   const previousStatusRef = useRef(statusFilter);
   const [activeTab, setActiveTab] = useState(
@@ -162,12 +169,18 @@ export const AdminView = ({
       {isUsuariosTab && (
         <AdminUsersPanel
           users={users}
+          filiaisDisponiveis={filiaisDisponiveis}
           usersLoading={usersLoading}
           passwordForm={passwordForm}
           passwordSaving={passwordSaving}
+          createUserForm={createUserForm}
+          createUserSaving={createUserSaving}
           currentUsuario={currentUsuario}
+          isRootAdmin={isRootAdmin}
           onUpdatePasswordForm={onUpdatePasswordForm}
           onSubmitPassword={onSubmitPassword}
+          onUpdateCreateUserForm={onUpdateCreateUserForm}
+          onCreateUser={onCreateUser}
         />
       )}
 
@@ -175,6 +188,7 @@ export const AdminView = ({
         <AdminDetailPanel
           selected={selected}
           isAprovadasTab={isAprovadasTab}
+          canApproveSolicitacao={canApproveSolicitacao}
           decisionForm={decisionForm}
           pedidoInfoForm={pedidoInfoForm}
           decisionLoading={decisionLoading}

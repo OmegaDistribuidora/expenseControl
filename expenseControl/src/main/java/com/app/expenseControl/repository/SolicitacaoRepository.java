@@ -11,19 +11,34 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> {
     List<Solicitacao> findByFilialOrderByEnviadoEmDesc(String filial);
+    List<Solicitacao> findByFilialInOrderByEnviadoEmDesc(Collection<String> filiais);
     List<Solicitacao> findByStatusOrderByEnviadoEmDesc(StatusSolicitacao status);
     Page<Solicitacao> findByFilialOrderByEnviadoEmDesc(String filial, Pageable pageable);
     Page<Solicitacao> findByStatusOrderByEnviadoEmDesc(StatusSolicitacao status, Pageable pageable);
     Page<Solicitacao> findByFilial(String filial, Pageable pageable);
+    Page<Solicitacao> findByFilialIn(Collection<String> filiais, Pageable pageable);
     Page<Solicitacao> findByStatus(StatusSolicitacao status, Pageable pageable);
+    Page<Solicitacao> findByStatusAndFilialIn(StatusSolicitacao status, Collection<String> filiais, Pageable pageable);
     long countByStatus(StatusSolicitacao status);
+    long countByStatusAndFilialIn(StatusSolicitacao status, Collection<String> filiais);
 
     @Query("select sum(coalesce(s.valorAprovado, s.valorEstimado)) from Solicitacao s where s.status = :status")
     BigDecimal sumValorAprovadoByStatus(@Param("status") StatusSolicitacao status);
+
+    @Query("""
+            select sum(coalesce(s.valorAprovado, s.valorEstimado))
+            from Solicitacao s
+            where s.status = :status and lower(s.filial) in :filiais
+            """)
+    BigDecimal sumValorAprovadoByStatusAndFiliais(
+            @Param("status") StatusSolicitacao status,
+            @Param("filiais") Collection<String> filiais
+    );
 
     @Query("""
             select new com.app.expenseControl.dto.SolicitacaoBreakdownDTO(
@@ -41,6 +56,23 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
 
     @Query("""
             select new com.app.expenseControl.dto.SolicitacaoBreakdownDTO(
+                c.nome,
+                count(s),
+                sum(coalesce(s.valorAprovado, s.valorEstimado))
+            )
+            from Solicitacao s
+            join s.categoria c
+            where s.status = :status and lower(s.filial) in :filiais
+            group by c.nome
+            order by sum(coalesce(s.valorAprovado, s.valorEstimado)) desc
+            """)
+    List<SolicitacaoBreakdownDTO> resumoPorCategoriaAndFiliais(
+            @Param("status") StatusSolicitacao status,
+            @Param("filiais") Collection<String> filiais
+    );
+
+    @Query("""
+            select new com.app.expenseControl.dto.SolicitacaoBreakdownDTO(
                 s.filial,
                 count(s),
                 sum(coalesce(s.valorAprovado, s.valorEstimado))
@@ -51,6 +83,22 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
             order by sum(coalesce(s.valorAprovado, s.valorEstimado)) desc
             """)
     List<SolicitacaoBreakdownDTO> resumoPorFilial(@Param("status") StatusSolicitacao status);
+
+    @Query("""
+            select new com.app.expenseControl.dto.SolicitacaoBreakdownDTO(
+                s.filial,
+                count(s),
+                sum(coalesce(s.valorAprovado, s.valorEstimado))
+            )
+            from Solicitacao s
+            where s.status = :status and lower(s.filial) in :filiais
+            group by s.filial
+            order by sum(coalesce(s.valorAprovado, s.valorEstimado)) desc
+            """)
+    List<SolicitacaoBreakdownDTO> resumoPorFilialAndFiliais(
+            @Param("status") StatusSolicitacao status,
+            @Param("filiais") Collection<String> filiais
+    );
 
     @Query("""
             select new com.app.expenseControl.dto.SolicitacaoStatusResumoDTO(
@@ -105,6 +153,28 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
 
     @Query("""
             select s from Solicitacao s
+            where lower(s.filial) in :filiais
+              and (
+                (:id is not null and s.id = :id)
+                or (:statusSearch is not null and s.status = :statusSearch)
+                or lower(s.titulo) like :term
+                or lower(s.filial) like :term
+                or lower(s.descricao) like :term
+                or lower(s.fornecedor) like :term
+                or lower(s.solicitanteNome) like :term
+                or lower(s.categoria.nome) like :term
+            )
+            """)
+    Page<Solicitacao> searchAllByFiliais(
+            @Param("filiais") Collection<String> filiais,
+            @Param("term") String term,
+            @Param("id") Long id,
+            @Param("statusSearch") StatusSolicitacao statusSearch,
+            Pageable pageable
+    );
+
+    @Query("""
+            select s from Solicitacao s
             where s.status = :status
               and (
                 (:id is not null and s.id = :id)
@@ -119,6 +189,30 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
             """)
     Page<Solicitacao> searchByStatus(
             @Param("status") StatusSolicitacao status,
+            @Param("term") String term,
+            @Param("id") Long id,
+            @Param("statusSearch") StatusSolicitacao statusSearch,
+            Pageable pageable
+    );
+
+    @Query("""
+            select s from Solicitacao s
+            where s.status = :status
+              and lower(s.filial) in :filiais
+              and (
+                (:id is not null and s.id = :id)
+                or (:statusSearch is not null and s.status = :statusSearch)
+                or lower(s.titulo) like :term
+                or lower(s.filial) like :term
+                or lower(s.descricao) like :term
+                or lower(s.fornecedor) like :term
+                or lower(s.solicitanteNome) like :term
+                or lower(s.categoria.nome) like :term
+              )
+            """)
+    Page<Solicitacao> searchByStatusAndFiliais(
+            @Param("status") StatusSolicitacao status,
+            @Param("filiais") Collection<String> filiais,
             @Param("term") String term,
             @Param("id") Long id,
             @Param("statusSearch") StatusSolicitacao statusSearch,

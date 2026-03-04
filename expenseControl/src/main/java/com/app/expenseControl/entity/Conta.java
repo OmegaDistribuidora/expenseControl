@@ -33,6 +33,12 @@ public class Conta {
     @Column(length = 120)
     private String filial;
 
+    @Column(name = "filiais_visiveis", length = 1000)
+    private String filiaisVisiveis;
+
+    @Column(name = "pode_aprovar_solicitacao")
+    private Boolean podeAprovarSolicitacao;
+
     @Column(nullable = false)
     private boolean ativo = true;
 }

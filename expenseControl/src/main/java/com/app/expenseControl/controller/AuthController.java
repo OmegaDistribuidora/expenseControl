@@ -3,6 +3,7 @@ package com.app.expenseControl.controller;
 import com.app.expenseControl.dto.AuthMeResponseDTO;
 import com.app.expenseControl.entity.Conta;
 import com.app.expenseControl.repository.ContaRepository;
+import com.app.expenseControl.service.ContaPermissionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,9 +17,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthController {
 
     private final ContaRepository contaRepository;
+    private final ContaPermissionService permissionService;
 
-    public AuthController(ContaRepository contaRepository) {
+    public AuthController(ContaRepository contaRepository, ContaPermissionService permissionService) {
         this.contaRepository = contaRepository;
+        this.permissionService = permissionService;
     }
 
     @GetMapping("/me")
@@ -28,7 +31,10 @@ public class AuthController {
                 conta.getUsuario(),
                 conta.getNome(),
                 conta.getTipo(),
-                conta.getFilial()
+                conta.getFilial(),
+                permissionService.canApproveSolicitacao(conta),
+                permissionService.isRootAdmin(conta),
+                permissionService.visibleFiliaisList(conta)
         );
     }
 

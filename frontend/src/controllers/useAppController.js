@@ -81,6 +81,8 @@ export const useAppController = () => {
     openConfirm,
     enabled: profileType === "ADMIN",
     currentUsuario: profile?.usuario || auth?.usuario || "",
+    canApproveSolicitacao: Boolean(profile?.podeAprovarSolicitacao),
+    isRootAdmin: Boolean(profile?.superAdmin),
     onOwnPasswordChanged: handleOwnPasswordChanged,
   });
 

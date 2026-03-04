@@ -100,10 +100,15 @@ function App() {
           search={controller.admin.search}
           sort={controller.admin.sort}
           users={controller.admin.users}
+          filiaisDisponiveis={controller.admin.filiaisDisponiveis}
           usersLoading={controller.admin.usersLoading}
           passwordForm={controller.admin.passwordForm}
           passwordSaving={controller.admin.passwordSaving}
+          createUserForm={controller.admin.createUserForm}
+          createUserSaving={controller.admin.createUserSaving}
           currentUsuario={controller.profile.usuario}
+          canApproveSolicitacao={Boolean(controller.profile.podeAprovarSolicitacao)}
+          isRootAdmin={Boolean(controller.profile.superAdmin)}
           onSelect={controller.admin.setSelectedId}
           onPageChange={controller.admin.setPage}
           onStatusChange={controller.admin.setStatusFilter}
@@ -122,6 +127,8 @@ function App() {
           onDeleteSolicitacao={controller.admin.onDeleteSolicitacao}
           onUpdatePasswordForm={controller.admin.onUpdatePasswordForm}
           onSubmitPassword={controller.admin.onSubmitPassword}
+          onUpdateCreateUserForm={controller.admin.onUpdateCreateUserForm}
+          onCreateUser={controller.admin.onCreateUser}
         />
       )}
       <ConfirmDialog

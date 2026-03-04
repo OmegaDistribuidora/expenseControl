@@ -12,6 +12,7 @@ import {
 export const AdminDetailPanel = ({
   selected,
   isAprovadasTab,
+  canApproveSolicitacao,
   decisionForm,
   pedidoInfoForm,
   decisionLoading,
@@ -27,7 +28,7 @@ export const AdminDetailPanel = ({
   onDownloadAttachment,
   onDeleteAttachment,
 }) => {
-  const canDecide = selected?.status === "PENDENTE";
+  const canDecide = canApproveSolicitacao && selected?.status === "PENDENTE";
   const isDecisionBusy = decisionLoading || pedidoInfoLoading || deleteLoading;
   const isPedidoInfoBusy = pedidoInfoLoading || decisionLoading || deleteLoading;
   const isDeleteBusy = deleteLoading || decisionLoading || pedidoInfoLoading;
@@ -159,9 +160,13 @@ export const AdminDetailPanel = ({
               {!isAprovadasTab && (
                 <div className="detail-block">
                   <span className="detail-label">Pedido de ajuste</span>
-                  <p className="small">
-                    Use esse campo quando precisar de mais detalhes da filial antes de decidir.
-                  </p>
+                  {canApproveSolicitacao ? (
+                    <p className="small">
+                      Use esse campo quando precisar de mais detalhes da filial antes de decidir.
+                    </p>
+                  ) : (
+                    <p className="small">Seu usuario pode apenas visualizar as solicitacoes.</p>
+                  )}
                   <div className="actions actions--end">
                     <button
                       className="btn btn--ghost"
@@ -230,7 +235,7 @@ export const AdminDetailPanel = ({
                         className="btn btn--danger"
                         type="button"
                         onClick={onDeleteSolicitacao}
-                        disabled={isDeleteBusy}
+                        disabled={!canApproveSolicitacao || isDeleteBusy}
                       >
                         {deleteLoading ? "Excluindo..." : "Excluir solicitação"}
                       </button>
@@ -245,7 +250,7 @@ export const AdminDetailPanel = ({
                       className="btn btn--danger"
                       type="button"
                       onClick={onDeleteSolicitacao}
-                      disabled={isDeleteBusy}
+                      disabled={!canApproveSolicitacao || isDeleteBusy}
                     >
                       {deleteLoading ? "Excluindo..." : "Excluir solicitação"}
                     </button>
