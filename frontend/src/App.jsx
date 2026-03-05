@@ -6,9 +6,17 @@ import { FilialView } from "./views/FilialView.jsx";
 import { HeaderView } from "./views/HeaderView.jsx";
 import { LoadingView } from "./views/LoadingView.jsx";
 import { LoginView } from "./views/LoginView.jsx";
+import { MaintenanceView } from "./views/MaintenanceView.jsx";
 import { NoticeView } from "./views/NoticeView.jsx";
 
-function App() {
+const ENABLED_VALUES = new Set(["1", "true", "yes", "on"]);
+
+const isMaintenanceEnabled = () => {
+  const value = String(import.meta.env.VITE_MAINTENANCE_MODE || "").trim().toLowerCase();
+  return ENABLED_VALUES.has(value);
+};
+
+function AppRuntime() {
   const controller = useAppController();
 
   if (!controller.auth) {
@@ -153,6 +161,13 @@ function App() {
       />
     </div>
   );
+}
+
+function App() {
+  if (isMaintenanceEnabled()) {
+    return <MaintenanceView />;
+  }
+  return <AppRuntime />;
 }
 
 export default App;
