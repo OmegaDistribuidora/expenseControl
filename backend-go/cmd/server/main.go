@@ -23,7 +23,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	db, err := store.NewPostgresStore(ctx, connString)
+	db, err := store.NewPostgresStore(ctx, connString, cfg)
 	if err != nil {
 		log.Fatalf("erro ao iniciar banco: %v", err)
 	}

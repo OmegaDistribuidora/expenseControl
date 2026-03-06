@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -12,6 +14,11 @@ type Config struct {
 	CORSAllowedOrigins   []string
 	AttachmentsLocalRoot string
 	SeedDefaultUsers     bool
+	DBMaxConns           int32
+	DBMinConns           int32
+	DBMaxConnLifetime    time.Duration
+	DBMaxConnIdleTime    time.Duration
+	DBHealthCheckPeriod  time.Duration
 	DatabaseURL          string
 	PGHost               string
 	PGPort               string
@@ -27,6 +34,11 @@ func Load() Config {
 		CORSAllowedOrigins:   splitCSV(env("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173")),
 		AttachmentsLocalRoot: env("ATTACHMENTS_LOCAL_ROOT", "/solicitacoes"),
 		SeedDefaultUsers:     envBool("SEED_DEFAULT_USERS", true),
+		DBMaxConns:           int32(envInt("DB_MAX_CONNS", 2)),
+		DBMinConns:           int32(envInt("DB_MIN_CONNS", 0)),
+		DBMaxConnLifetime:    envDuration("DB_MAX_CONN_LIFETIME", 5*time.Minute),
+		DBMaxConnIdleTime:    envDuration("DB_MAX_CONN_IDLE_TIME", 2*time.Minute),
+		DBHealthCheckPeriod:  envDuration("DB_HEALTH_CHECK_PERIOD", 30*time.Second),
 		DatabaseURL:          strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		PGHost:               env("PGHOST", "localhost"),
 		PGPort:               env("PGPORT", "5432"),
@@ -116,4 +128,28 @@ func envBool(name string, fallback bool) bool {
 	default:
 		return fallback
 	}
+}
+
+func envInt(name string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func envDuration(name string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }

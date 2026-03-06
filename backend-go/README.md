@@ -46,6 +46,7 @@ Pendente para paridade completa:
    - `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`
    - opcional: `CORS_ALLOWED_ORIGINS`, `PORT`
    - opcional: `SEED_DEFAULT_USERS=true|false` (default `true`)
+   - tuning de pool: `DB_MAX_CONNS`, `DB_MIN_CONNS`, `DB_MAX_CONN_LIFETIME`, `DB_MAX_CONN_IDLE_TIME`, `DB_HEALTH_CHECK_PERIOD`
 4. Rode:
 
 ```bash
@@ -60,6 +61,14 @@ No servico novo de backend Go, configure:
 - `DATABASE_URL` (do Postgres Railway)
 - `CORS_ALLOWED_ORIGINS` com dominio do frontend
 - `PORT` (Railway injeta automaticamente)
+- sugerido para reduzir RAM em idle:
+  - `DB_MAX_CONNS=2`
+  - `DB_MIN_CONNS=0`
+  - `DB_MAX_CONN_IDLE_TIME=120s`
+  - `DB_MAX_CONN_LIFETIME=300s`
+  - `GOMEMLIMIT=256MiB`
+  - `GOGC=60`
+  - `GODEBUG=madvdontneed=1`
 
 ## Observacao importante
 
