@@ -359,6 +359,7 @@ func (s *PostgresStore) scanSolicitacoes(ctx context.Context, query string, args
 		id := solicitacoes[idx].ID
 		solicitacoes[idx].Linhas = linhasByID[id]
 		solicitacoes[idx].Historico = historicoByID[id]
+		normalizeSolicitacaoCollections(&solicitacoes[idx])
 	}
 	return solicitacoes, nil
 }
@@ -376,6 +377,9 @@ func (s *PostgresStore) loadLinhasBySolicitacao(ctx context.Context, ids []int64
 	defer rows.Close()
 
 	out := make(map[int64][]domain.SolicitacaoLinha, len(ids))
+	for _, id := range ids {
+		out[id] = []domain.SolicitacaoLinha{}
+	}
 	for rows.Next() {
 		var solicitacaoID int64
 		var item domain.SolicitacaoLinha
@@ -400,6 +404,9 @@ func (s *PostgresStore) loadHistoricoBySolicitacao(ctx context.Context, ids []in
 	defer rows.Close()
 
 	out := make(map[int64][]domain.SolicitacaoHistorico, len(ids))
+	for _, id := range ids {
+		out[id] = []domain.SolicitacaoHistorico{}
+	}
 	for rows.Next() {
 		var solicitacaoID int64
 		var item domain.SolicitacaoHistorico
@@ -628,4 +635,16 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func normalizeSolicitacaoCollections(s *domain.Solicitacao) {
+	if s == nil {
+		return
+	}
+	if s.Linhas == nil {
+		s.Linhas = []domain.SolicitacaoLinha{}
+	}
+	if s.Historico == nil {
+		s.Historico = []domain.SolicitacaoHistorico{}
+	}
 }
