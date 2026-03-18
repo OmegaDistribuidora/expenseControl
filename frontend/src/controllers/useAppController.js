@@ -8,6 +8,24 @@ import { useConfirmDialog } from "./useConfirmDialog.js";
 import { useFilialController } from "./useFilialController.js";
 import { useNotice } from "./useNotice.js";
 
+const readSsoTokenFromHash = () => {
+  try {
+    const hash = String(window.location.hash || "").replace(/^#/, "");
+    if (!hash) return null;
+    const params = new URLSearchParams(hash);
+    return params.get("sso");
+  } catch {
+    return null;
+  }
+};
+
+const clearSsoHash = () => {
+  const { pathname, search } = window.location;
+  window.history.replaceState(null, "", `${pathname}${search}`);
+};
+
+const getAuthorizationHeader = (auth) => auth?.authorization || null;
+
 export const useAppController = () => {
   const [auth, setAuth] = useState(() => loadStoredAuth());
   const [profile, setProfile] = useState(null);
@@ -26,18 +44,22 @@ export const useAppController = () => {
   } = useConfirmDialog();
 
   const requestAuthed = useCallback(
-    async (path, options = {}) => apiRequest(path, options, auth?.basic),
-    [auth?.basic],
+    async (path, options = {}) => apiRequest(path, options, getAuthorizationHeader(auth)),
+    [auth],
   );
 
   const handleOwnPasswordChanged = useCallback((newPassword) => {
+    if (auth?.authType !== "basic") return;
     const usuario = auth?.usuario;
     if (!usuario || !newPassword) return;
-    const basic = btoa(`${usuario}:${newPassword}`);
-    const nextAuth = { usuario, basic };
+    const nextAuth = {
+      usuario,
+      authType: "basic",
+      authorization: `Basic ${btoa(`${usuario}:${newPassword}`)}`,
+    };
     setAuth(nextAuth);
     saveStoredAuth(nextAuth);
-  }, [auth?.usuario]);
+  }, [auth?.authType, auth?.usuario]);
 
   const updateLoginForm = useCallback((patch) => {
     setLoginForm((prev) => ({ ...prev, ...patch }));
@@ -61,7 +83,7 @@ export const useAppController = () => {
     loadAttachments,
   } = useAttachmentsController({
     requestAuthed,
-    authBasic: auth?.basic,
+    authHeader: getAuthorizationHeader(auth),
     showNotice,
     openConfirm,
   });
@@ -117,9 +139,13 @@ export const useAppController = () => {
     dismissNotice();
 
     try {
-      const basic = btoa(`${loginForm.usuario}:${loginForm.password}`);
-      const profileData = await apiRequest("/auth/me", {}, basic);
-      const nextAuth = { usuario: loginForm.usuario, basic };
+      const authorization = `Basic ${btoa(`${loginForm.usuario}:${loginForm.password}`)}`;
+      const profileData = await apiRequest("/auth/me", {}, authorization);
+      const nextAuth = {
+        usuario: loginForm.usuario,
+        authType: "basic",
+        authorization,
+      };
       setAuth(nextAuth);
       saveStoredAuth(nextAuth);
       setProfile(profileData);
@@ -132,12 +158,61 @@ export const useAppController = () => {
   };
 
   useEffect(() => {
-    if (!auth?.basic) return;
+    if (!auth?.authorization) return;
     void loadProfile();
-  }, [auth?.basic, loadProfile]);
+  }, [auth?.authorization, loadProfile]);
 
   useEffect(() => {
-    if (!auth?.basic) return;
+    const ssoToken = readSsoTokenFromHash();
+    if (auth || !ssoToken) return;
+
+    let alive = true;
+    setAuthLoading(true);
+
+    apiRequest("/auth/sso/exchange", {
+      method: "POST",
+      body: JSON.stringify({ token: ssoToken }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((payload) => {
+        if (!alive) return;
+        const token = String(payload?.token || "").trim();
+        const profileData = payload?.profile || null;
+        if (!token || !profileData?.usuario) {
+          throw new Error("Resposta invalida do login delegado.");
+        }
+
+        const nextAuth = {
+          usuario: profileData.usuario,
+          authType: String(payload?.authType || "bearer").toLowerCase(),
+          authorization: `Bearer ${token}`,
+        };
+        setAuth(nextAuth);
+        saveStoredAuth(nextAuth);
+        setProfile(profileData);
+        dismissNotice();
+      })
+      .catch((error) => {
+        if (!alive) return;
+        handleLogout();
+        showNotice("error", getErrorMessage(error, "Falha ao validar login vindo do Ecossistema."));
+      })
+      .finally(() => {
+        clearSsoHash();
+        if (alive) {
+          setAuthLoading(false);
+        }
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [auth, dismissNotice, handleLogout, showNotice]);
+
+  useEffect(() => {
+    if (!auth?.authorization) return;
     if (!profileType) return;
     const solicitacaoId = profileType === "ADMIN" ? admin.selectedId : filial.selectedId;
     if (!solicitacaoId) {
@@ -152,7 +227,7 @@ export const useAppController = () => {
     void loadAttachments(solicitacaoId);
   }, [
     admin.selectedId,
-    auth?.basic,
+    auth?.authorization,
     clearAttachments,
     filial.selectedId,
     loadAttachments,

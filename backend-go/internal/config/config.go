@@ -14,6 +14,10 @@ type Config struct {
 	CORSAllowedOrigins   []string
 	AttachmentsLocalRoot string
 	SeedDefaultUsers     bool
+	AuthTokenSecret      string
+	EcosystemSsoIssuer   string
+	EcosystemSsoAudience string
+	EcosystemSsoSecret   string
 	DBMaxConns           int32
 	DBMinConns           int32
 	DBMaxConnLifetime    time.Duration
@@ -34,6 +38,10 @@ func Load() Config {
 		CORSAllowedOrigins:   splitCSV(env("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173")),
 		AttachmentsLocalRoot: env("ATTACHMENTS_LOCAL_ROOT", "/solicitacoes"),
 		SeedDefaultUsers:     envBool("SEED_DEFAULT_USERS", true),
+		AuthTokenSecret:      env("AUTH_TOKEN_SECRET", "expense-control-dev-secret"),
+		EcosystemSsoIssuer:   env("ECOSYSTEM_SSO_ISSUER", "ecosistema-omega"),
+		EcosystemSsoAudience: env("ECOSYSTEM_SSO_AUDIENCE", "expenseControl"),
+		EcosystemSsoSecret:   strings.TrimSpace(os.Getenv("ECOSYSTEM_SSO_SHARED_SECRET")),
 		DBMaxConns:           int32(envInt("DB_MAX_CONNS", 2)),
 		DBMinConns:           int32(envInt("DB_MIN_CONNS", 0)),
 		DBMaxConnLifetime:    envDuration("DB_MAX_CONN_LIFETIME", 5*time.Minute),

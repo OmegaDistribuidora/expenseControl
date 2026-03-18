@@ -19,6 +19,10 @@ const isMaintenanceEnabled = () => {
 function AppRuntime() {
   const controller = useAppController();
 
+  if (!controller.auth && controller.authLoading) {
+    return <LoadingView />;
+  }
+
   if (!controller.auth) {
     return (
       <LoginView

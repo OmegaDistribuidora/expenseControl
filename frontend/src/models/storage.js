@@ -5,7 +5,7 @@ export const loadStoredAuth = () => {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed?.basic) return null;
+    if (!parsed?.authorization) return null;
     return parsed;
   } catch {
     return null;

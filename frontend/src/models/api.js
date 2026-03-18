@@ -7,14 +7,14 @@ const parseApiError = (response, payload) => {
   return `${payload.message || payload.error || fallback}${details}`;
 };
 
-export const apiRequest = async (path, options = {}, basicOverride) => {
+export const apiRequest = async (path, options = {}, authHeaderOverride) => {
   const headers = new Headers(options.headers || {});
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   if (options.body && !headers.has("Content-Type") && !isFormData) {
     headers.set("Content-Type", "application/json");
   }
-  if (basicOverride) {
-    headers.set("Authorization", `Basic ${basicOverride}`);
+  if (authHeaderOverride) {
+    headers.set("Authorization", authHeaderOverride);
   }
 
   const response = await fetch(`${API_BASE}${path}`, {

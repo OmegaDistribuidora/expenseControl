@@ -25,14 +25,16 @@ func NewRouter(cfg config.Config, db *store.PostgresStore) http.Handler {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	authHandler := handlers.NewAuthHandler()
+	authHandler := handlers.NewAuthHandler(cfg, db)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	solicitacaoHandler := handlers.NewSolicitacaoHandler(cfg, db)
 	adminHandler := handlers.NewAdminHandler(db)
 	attachmentHandler := handlers.NewAttachmentHandler(cfg, db)
 
+	r.Post("/auth/sso/exchange", authHandler.SsoExchange)
+
 	r.Group(func(protected chi.Router) {
-		protected.Use(BasicAuth(db))
+		protected.Use(AuthMiddleware(cfg, db))
 		protected.Get("/auth/me", authHandler.Me)
 
 		protected.Group(func(filial chi.Router) {

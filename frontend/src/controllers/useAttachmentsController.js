@@ -5,7 +5,7 @@ import { getErrorMessage } from "./utils/errors.js";
 
 const PREVIEWABLE_EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg"]);
 
-export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice, openConfirm }) => {
+export const useAttachmentsController = ({ requestAuthed, authHeader, showNotice, openConfirm }) => {
   const [attachments, setAttachments] = useState([]);
   const [attachmentsLoading, setAttachmentsLoading] = useState(false);
   const [attachmentsUploading, setAttachmentsUploading] = useState(false);
@@ -133,7 +133,7 @@ export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice,
         showNotice("error", "Aguarde o carregamento dos anexos.");
         return;
       }
-      if (!authBasic) {
+      if (!authHeader) {
         showNotice("error", "Usuário não autenticado.");
         return;
       }
@@ -161,7 +161,7 @@ export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice,
     [
       attachments.length,
       attachmentsLoading,
-      authBasic,
+      authHeader,
       loadAttachments,
       showNotice,
       uploadPendingAttachments,
@@ -202,14 +202,14 @@ export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice,
   const handleDownloadAttachment = useCallback(
     async (attachment) => {
       if (!attachment?.id) return;
-      if (!authBasic) {
+      if (!authHeader) {
         showNotice("error", "Usuário não autenticado.");
         return;
       }
       try {
         const response = await fetch(`${API_BASE}/anexos/${attachment.id}/download?disposition=inline`, {
           headers: {
-            Authorization: `Basic ${authBasic}`,
+            Authorization: authHeader,
           },
         });
 
@@ -259,7 +259,7 @@ export const useAttachmentsController = ({ requestAuthed, authBasic, showNotice,
         showNotice("error", getErrorMessage(error, "Erro ao visualizar anexo."));
       }
     },
-    [authBasic, showNotice],
+    [authHeader, showNotice],
   );
 
   const attachmentsApi = useMemo(
