@@ -119,6 +119,10 @@ func (h *AuthHandler) SsoExchange(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, r, http.StatusUnauthorized, "Usuario alvo nao encontrado ou inativo.")
 		return
 	}
+	if conta.Tipo == domain.TipoContaAdmin && !claims.EcosystemIsAdmin {
+		api.WriteError(w, r, http.StatusForbidden, "Usuario do Ecossistema nao pode acessar administrador via SSO.")
+		return
+	}
 
 	h.markConsumed(claims.ID, claims.ExpiresAt)
 

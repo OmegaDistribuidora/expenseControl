@@ -17,6 +17,7 @@ type LocalAuthClaims struct {
 type EcosystemSsoClaims struct {
 	EcosystemUserID   int64  `json:"ecosystemUserId,omitempty"`
 	EcosystemUsername string `json:"ecosystemUsername,omitempty"`
+	EcosystemIsAdmin  bool   `json:"ecosystemIsAdmin,omitempty"`
 	TargetLogin       string `json:"targetLogin"`
 	SystemID          int64  `json:"systemId,omitempty"`
 	jwt.RegisteredClaims

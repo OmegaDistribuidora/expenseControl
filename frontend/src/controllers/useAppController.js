@@ -27,7 +27,8 @@ const clearSsoHash = () => {
 const getAuthorizationHeader = (auth) => auth?.authorization || null;
 
 export const useAppController = () => {
-  const [auth, setAuth] = useState(() => loadStoredAuth());
+  const initialSsoToken = readSsoTokenFromHash();
+  const [auth, setAuth] = useState(() => (initialSsoToken ? null : loadStoredAuth()));
   const [profile, setProfile] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [loginForm, setLoginForm] = useState({ usuario: "", password: "" });
@@ -164,10 +165,13 @@ export const useAppController = () => {
 
   useEffect(() => {
     const ssoToken = readSsoTokenFromHash();
-    if (auth || !ssoToken) return;
+    if (!ssoToken) return;
 
     let alive = true;
     setAuthLoading(true);
+    setAuth(null);
+    setProfile(null);
+    saveStoredAuth(null);
 
     apiRequest("/auth/sso/exchange", {
       method: "POST",
@@ -209,7 +213,7 @@ export const useAppController = () => {
     return () => {
       alive = false;
     };
-  }, [auth, dismissNotice, handleLogout, showNotice]);
+  }, [dismissNotice, handleLogout, showNotice]);
 
   useEffect(() => {
     if (!auth?.authorization) return;
